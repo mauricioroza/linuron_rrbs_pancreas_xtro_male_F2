@@ -1,0 +1,1345 @@
+---
+author: 
+ - Mauricio Roza
+date: "`r Sys.Date()`"
+title: "DNA Methylation Linuron Multigenerational Xenopus tropicalis"
+subtitle: "F2 Generation"
+
+knit: (function(inputFile, encoding) {
+      out_dir <- "../reports";
+      rmarkdown::render(inputFile,
+                        encoding=encoding,
+                        output_dir=file.path(dirname(inputFile), out_dir))})
+
+output:
+  rmdformats::readthedown:  # https://www.datadreaming.org/post/r-markdown-theme-gallery/
+    highlight: kate
+    df_print: paged         # tables are pagable over rows and columns
+    code_folding: hide      # hides code snippets by default
+    fig_width: 9            # default is 7
+---
+
+# Abstract
+
+
+## Methods
+
+The experiments were conducted at the Evolutionary Biology Center, Uppsala University, with Xenopus tropicalis frogs originated from Xenopus One (Dexter, MI, USA). This study is a continuation of (Orton et al., 2018) and (Karlsson et al., 2021). Briefly, in the F0 generation, free-swimming tadpoles (NF stage 40, (Faber and Nieuwkoop, 1994)) were exposed to 45 μg/L of linuron (99.9% purity; CAS 330–55-2, Sigma-Aldrich, St. Louis, MO, USA) dissolved in 0.0008% acetone or to acetone only (Control group) until they reached metamorphosis (NF 66). The exposure was conducted with three tanks per treatment, using a semi-static system where half of the water was changed three times per week, photoperiod 12:12h and 26°C. Linuron concentrations were analysed using gas chromatography/mass spectroscopy (GCMS) throughout the experiment and water quality was verified every other week (Orton et al., 2018).
+After the exposure period, the animals were transferred to clean water and when they reached sexual maturity, exposed males were mated with naïve females to obtain the F1 generation and follow the male-transmitted effects of linuron. At 20 months of age, F1 males were mated with naïve females to obtain F2 generation, allowing the study of transgenerational effects (Karlsson et al., 2021). 
+The experiments were approved by the Uppsala Animal Ethical Committee and in accordance with the Swedish Legislation on Animal Experimentation (Animal Welfare Act SFS1998:56) and the European Union Directive on the Protection of Animals Used for Scientific Purposes (2010/63/EU).
+
+Dissection
+
+The frogs were anaesthetized in buffered tricaine (tricainemethane sulfonate 0.3%, pH 7; Sigma-Aldrich, St. Louis, MO, USA) and euthanised by decapitation. Brain and the right pancreas were collected and stored at -80 °C until analysis.
+
+DNA extraction, library preparation and sequencing
+
+Genomic DNA from brain and pancreas samples from 7 control and 9 treatment individuals in the F2 generation were extracted using a Qiagen Allprep DNA/RNA mini kit (Qiagen, Germany) according to the manufacturer’s protocol with an additional wash with AW2 buffer. DNA quality was evaluated using NanoDrop ND-1000 spectrometer (Thermo Fisher Scientific, United States) and agarose gel electrophoresis (Bio-Rad Laboratories, US). DNA concentration was measured using Qubit 4 fluorometer with double-stranded DNA (dsDNA) Broad Range (BR) Assay (Thermo Fisher Scientific, United States). One pancreas control sample with low concentration and low 230/260nm absorbance ratio value was excluded from sequencing.
+ Library preparation and RRBS was performed by the Bioinformatics and Expression Analysis core facility (BEA, Karolinska Institute, Sweden) using Diagenode Premium RRBS kit (Diagenode, Belgium) and sequenced on the Illumina Nextseq 2000 platform (Illumina, United States). Average sequencing read size was 44.18 ± 16.10 (mean ± s.d.) millions of single-end reads. The data for this study have been deposited in the European Nucleotide Archive (ENA) at EMBL-EBI under accession number PRJEB59360 (https://www.ebi.ac.uk/ena/browser/view/PRJEB59360).
+
+Bioinformatics analysis
+
+Sequencing data were processed using the Nextflow nf-core methylseq pipeline version 1.6.1 (Ewels et al., 2021, 2020). The reads were aligned to the X. tropicalis reference genome (UCB v. 10.0) using Bismark v. 0.23.0, with an average of 41.7% ± 4.5% reads uniquely aligned. Sequencing quality was verified by visualizing FastQC v0.11.9 reports. 
+
+## Hypothesis
+
+Increased methylation levels on CpG islands on promoter regions are generally associated with repression of RNA expression. We hypothesise that differential methylatation will be found on regions related to genes associated with metabolic pathways and gonadal germ cell development.
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+# Main analysis package
+library(methylKit)
+# Annotation package
+library(genomation)
+library(GenomicRanges)
+library(tidyverse)
+library(ggrepel)
+library(biomaRt)
+library(DT)
+```
+
+# Pancreas
+
+```{r Read coverage files, message=FALSE, warning=FALSE}
+# Define the list containing the bismark coverage files.
+file.names <- list.files("C:/Users/MauricioRoza/OneDrive/PhD/Linuron multigenerational/Sequencing analysis/methylation_coverage/", full.names = TRUE)
+file.names2 <- as.list(file.names)
+
+# Sorting files order
+pancreas <- file.names2[grep("_P_", file.names2)]  
+pancreas <- as.list(unlist(pancreas)[order(substr(unlist(pancreas), start = 118, stop = max(nchar(unlist(pancreas)))))])
+pancreas
+
+# read the listed files into a methylRawList object making sure the other
+# parameters are filled in correctly.
+myobj.pancreas <- methRead(pancreas,
+                           sample.id=list("pancreas_C2", "pancreas_C3", "pancreas_C4", "pancreas_C5", "pancreas_C6", "pancreas_C7", 
+                                          "pancreas_H3", "pancreas_H7","pancreas_H4", "pancreas_H5", "pancreas_H9"),
+                           pipeline = "bismarkCoverage",
+                           assembly="Xtro10.0",
+                           treatment=c(0,0,0,0,0,0,1,1,1,1,1),
+                           mincov = 10
+)
+
+# Change chromosome names
+chr.alias <- read.table("C:/Users/MauricioRoza/OneDrive/PhD/Linuron multigenerational/Sequencing analysis/Xtro_chromAlias.txt", header = TRUE)
+
+chr.name1 <- as.list(chr.alias$genbank)
+chr.name2 <- as.list(chr.alias$ucsc)
+
+for(i in 1:length(myobj.pancreas)){
+  for(x in 1:length(chr.name1)){
+  myobj.pancreas[[i]]$chr[myobj.pancreas[[i]]$chr == chr.name1[[x]]] <- chr.name2[[x]]
+}}
+
+# Check chromosome names
+#levels(as.factor(myobj.pancreas[[1]]$chr))
+
+lapply(myobj.pancreas, FUN = nrow) %>% unlist %>% mean
+lapply(myobj.pancreas, FUN = nrow) %>% unlist %>% sd
+
+
+myobj.pancreas.tile <- tileMethylCounts(myobj.pancreas, win.size = 100, step.size = 100)
+
+```
+
+## Methylation percentage / Read coverage per sample
+
+```{r}
+# check number of samples
+#myobj.pancreas.tile
+
+# What type of data is stored here?
+#head(myobj.pancreas.tile[[1]])
+
+# Get a histogram of the methylation percentage per sample
+lapply(myobj.pancreas.tile, function(x) {getMethylationStats(x, plot=TRUE, both.strands=FALSE)})
+
+# Get a histogram of the read coverage per sample
+lapply(myobj.pancreas.tile, function(x) {getCoverageStats(x, plot=TRUE, both.strands=FALSE)})
+```
+
+## Filtering
+
+Number of CpGs covered:
+
+```{r message=FALSE, warning=FALSE}
+min <- 4L #min.per.group unite
+
+# Filter step = Discards bases with coverage below 10 reads and above 99.9th percentile
+myobj.filt.pancreas <- filterByCoverage(myobj.pancreas.tile,
+                               lo.count=10,
+                               lo.perc=NULL,
+                               hi.count=NULL,
+                               hi.perc=99.9)
+# Normalization
+myobj.filt.norm.pancreas <- normalizeCoverage(myobj.filt.pancreas, method = "median")
+
+# Merge data
+meth.pancreas <- methylKit::unite(myobj.filt.norm.pancreas, destrand=FALSE, min.per.group = min) #min.per.group = minimum number of samples per replicate needed to cover a region/base
+
+# Number of bases covered
+nrow(meth.pancreas)
+```
+
+## Further Filtering
+
+Distribution of the per-CpG standard deviation to determine a suitable cutoff
+
+```{r}
+##Further Filtering
+
+# get percent methylation matrix
+pm.pancreas=percMethylation(meth.pancreas)
+
+# calculate standard deviation of CpGs
+sds.pancreas=matrixStats::rowSds(pm.pancreas, na.rm = TRUE)
+
+# Visualize the distribution of the per-CpG standard deviation
+# to determine a suitable cutoff
+hist(sds.pancreas, breaks = 100)
+
+# keep only CpG with standard deviations larger than 2%
+meth.pancreas <- meth.pancreas[sds.pancreas > 2]
+```
+
+Keep only CpG with standard deviations larger than 2%. This leaves us with this number of CpG regions:
+
+```{r}
+# This leaves us with this number of CpG regions
+nrow(meth.pancreas)
+```
+
+## Data Structure/Outlier Detection
+
+```{r warning=FALSE}
+##Data Structure/Outlier Detection
+
+getCorrelation(meth.pancreas,plot=TRUE)
+
+clusterSamples(meth.pancreas, dist="correlation", method="ward.D", plot=TRUE)
+
+PCASamples(meth.pancreas, comp = c(1,2))
+```
+
+## pancreas Differentially Methylated Regions
+
+Histogram p-values, q-values(adjusted for FDR) and % methilation difference between control and treatment
+
+```{r warning=FALSE}
+# Test for differential methylation... This might take a few minutes.
+myDiff.pancreas <- calculateDiffMeth(meth.pancreas,
+                            overdispersion = "MN",
+                            adjust="SLIM",
+                            test = "Chisq")
+
+pancreas.meth.dir <- c("../data/myDiff.pancreas.RData")
+save(myDiff.pancreas, ascii=FALSE, file=pancreas.meth.dir)
+rm(myDiff.pancreas)
+load(pancreas.meth.dir)
+myDiff.pancreas
+
+hist(myDiff.pancreas$pvalue)
+hist(myDiff.pancreas$qvalue)
+hist(myDiff.pancreas$meth.diff)
+```
+
+## Overview of percentage hyper and hypo DMRs per chromosome.
+
+```{r}
+meth.cut <- 10
+qvalue.cut <- 0.05
+
+# Overview of percentage hyper and hypo CpGs per chromosome.
+diffMethPerChr(myDiff.pancreas, meth.cutoff = meth.cut, qvalue.cutoff = qvalue.cut)
+
+# get hyper methylated bases and order by qvalue
+myDiff10p.hyper.pancreas <- getMethylDiff(myDiff.pancreas,
+                                 difference=meth.cut,
+                                 qvalue=qvalue.cut,
+                                 type="hyper")
+myDiff10p.hyper.pancreas <- myDiff10p.hyper.pancreas[order(myDiff10p.hyper.pancreas$qvalue),]
+
+# get hypo methylated bases and order by qvalue
+myDiff10p.hypo.pancreas <- getMethylDiff(myDiff.pancreas,
+                                difference=meth.cut,
+                                qvalue=qvalue.cut,
+                                type="hypo")
+myDiff10p.hypo.pancreas <- myDiff10p.hypo.pancreas[order(myDiff10p.hypo.pancreas$qvalue),]
+
+```
+
+## List of all pancreas Differentially Methylated Regions
+
+```{r}
+# get all differentially methylated bases and order by qvalue
+myDiff10p.pancreas <- getMethylDiff(myDiff.pancreas,
+                           difference=meth.cut,
+                           qvalue=qvalue.cut)
+myDiff10p.pancreas <- myDiff10p.pancreas[order(myDiff10p.pancreas$qvalue),]
+
+myDiff10p.pancreas %>% datatable
+```
+
+
+```{r eval=FALSE, include=FALSE}
+#mart
+
+mart <- biomaRt::useDataset(dataset = "xtropicalis_gene_ensembl",         
+                            mart    = useMart("ENSEMBL_MART_ENSEMBL",       
+                                              host    = "https://www.ensembl.org"))   
+
+martfile <- c("../data/mart_xtropicalis_gene_ensembl.RData")
+save(mart, ascii=FALSE, file=martfile)
+
+load(martfile)
+mart
+
+
+#OrgDB
+
+library(AnnotationHub)
+hub <- AnnotationHub()
+q <- query(hub, c("org.Xenopus_tropicalis.eg.sqlite","Xenopus tropicalis"))
+q
+q$title
+q$rdataclass
+
+id <- q$ah_id[length(q)]
+Xt <- hub[[id]]
+
+save(Xt, ascii=FALSE, file=OrgDBfile)
+
+OrgDBfile <- c("../data/org.Xenopus_tropicalis.eg.sqlite.RData")
+save(Xt, ascii=FALSE, file=OrgDBfile)
+
+
+load(OrgDBfile)
+```
+
+
+## CpG Annotation
+
+```{r}
+###CpG annotation
+
+# First load the annotation data; i.e the coordinates of promoters, TSS, intron and exons
+
+ensembl_anot.pancreas <- readTranscriptFeatures("../annotations/Xtro10_ensemble_gtf2bed_ucsc_chr.bed")
+
+
+# Annotate hypermethylated CpGs ("target") with promoter/exon/intron
+# information ("feature"). This function operates on GRanges objects, so we # first coerce the methylKit object to GRanges.
+myDiff10p.anot.pancreas <- annotateWithGeneParts(target = as(myDiff10p.pancreas,"GRanges"),
+                                              feature = ensembl_anot.pancreas,
+                                              strand = TRUE,
+                                              intersect.chr = TRUE)
+getTargetAnnotationStats(myDiff10p.anot.pancreas, percentage=FALSE,precedence=TRUE)
+
+
+# Summary of target set annotation
+myDiff10p.anot.pancreas
+
+# View the distance to the nearest Transcription Start Site; the target.row column in the output indicates the row number in the initial target set
+dist_tss.pancreas <- getAssociationWithTSS(myDiff10p.anot.pancreas)
+hist(dist_tss.pancreas$dist.to.feature)
+```
+
+Count of differentially methylated CpGs within promoters,introns or exons
+
+```{r}
+# See whether the differentially methylated CpGs are within promoters,introns or exons; the order is the same as the target set
+feature.sum.pancreas <- genomation::getMembers(myDiff10p.anot.pancreas)
+sum.pancreas <- apply(feature.sum.pancreas, 2, FUN = sum) %>% t %>% data.frame %>%
+  mutate(intergenic = nrow(myDiff10p.pancreas) - sum(.)) %>%
+  mutate(total = sum(.))
+sum.pancreas
+
+
+# This can also be summarized for all differentially methylated CpGs
+genomation::plotTargetAnnotation(myDiff10p.anot.pancreas, main = "pancreas Differentially Methylated Regions Genomic Features")
+```
+
+```{r Get biomart annnotations, eval=FALSE, warning=FALSE, include=FALSE}
+# Select a mart and data set        
+mart <- biomaRt::useDataset(dataset = "xtropicalis_gene_ensembl",         
+                            mart    = useMart("ENSEMBL_MART_ENSEMBL",       
+                                              host    = "https://www.ensembl.org"))   
+
+#Download annotations from ensembl biomaRt
+xen.biomart <- biomaRt::getBM(attributes = 
+                                c("ensembl_gene_id","external_gene_name","chromosome_name", 
+                                  "start_position","end_position","description"
+                                  ),       
+                              filters    = "",
+                              values = "",
+                              mart       = mart) 
+
+c("go_id","name_1006","definition_1006","go_linkage_type")
+
+#Change chomosome names
+chr.alias.biomart <- read.table("C:/Users/MauricioRoza/OneDrive/PhD/Linuron multigenerational/Sequencing analysis/Xtro_chromAlias.txt", header = TRUE)
+chr.alias.biomart$ensembl <- chr.alias.biomart$genbank
+chr.alias.biomart[c(1:10),5] <- c(1,10,2,3,4,5,6,7,8,9)
+
+xen.biomart = xen.biomart %>%
+  ## join the relevant alias column into xen biomart
+  left_join(
+    dplyr::select(chr.alias.biomart, ensembl, ucsc),
+    by = c("chromosome_name" = "ensembl")
+  ) %>%
+  ## replace all chromosome_names with ucsc value (if not NA)
+  mutate(chromosome_name = coalesce(ucsc, chromosome_name)) %>%
+  ## drop ucsc columns
+  select(-ucsc)
+
+write.table(xen.biomart, "../annotations/xen.biomart.txt", row.names = FALSE, col.names = TRUE)
+```
+
+## Volcano plot with annotated genes associated with DMR
+
+```{r}
+martfile <- c("../data/mart_xtropicalis_gene_ensembl.RData")
+
+load(martfile)
+
+xen.biomart <- read.table("../annotations/xen.biomart.txt", header = TRUE)
+
+# Table overlapping CpG regions with associated genes
+
+library(ChIPpeakAnno)
+
+metadata <- getData(myDiff10p.pancreas)
+
+meth_pos.pancreas <- GRanges(
+  seqnames = myDiff10p.pancreas$chr, 
+  ranges = IRanges(start = myDiff10p.pancreas$start, end = myDiff10p.pancreas$end),
+  mcols = metadata[, c(5:7)]
+)
+
+xtro <- getAnnotation(mart, featureType = "TSS")
+
+res.pancreas <- annotatePeakInBatch(meth_pos.pancreas, AnnotationData = xtro, FeatureLocForDistance="TSS", output = "overlapping", maxgap = 2000, multiple = TRUE) %>% data.frame
+
+t.pancreas <- res.pancreas %>%
+  left_join(
+    dplyr::select(xen.biomart, ensembl_gene_id, external_gene_name, description),
+    by = c("feature" = "ensembl_gene_id"))
+
+t.pancreas[,c(1:3,6:8,10,14,18:19)] %>% datatable
+
+#plot paramenters
+pancreas.plot <- merge(getData(myDiff.pancreas) , t.pancreas, all.x = TRUE) %>%
+  mutate(methylation_status = case_when(
+    meth.diff > meth.cut & qvalue < qvalue.cut ~ "Hypermethylated",
+    meth.diff < -meth.cut & qvalue < qvalue.cut ~ "Hypomethylated",
+    TRUE ~ "N.S."
+  ))
+
+#ggplot
+
+plot.pancreas <- ggplot(data=pancreas.plot, aes(x=meth.diff, y=-log10(qvalue), col=methylation_status)) +
+  geom_point() + 
+  theme_minimal() +
+  scale_color_manual(values=c("mediumblue", "firebrick", "gray")) +
+  geom_vline(xintercept=c(-meth.cut, meth.cut), col="gray57", linetype = "longdash") +
+  geom_hline(yintercept=-log10(qvalue.cut), col="gray57", linetype = "longdash") +
+  labs(title = "pancreas Differentially Methylated Regions",
+    subtitle =paste("qvalue <", as.character(qvalue.cut), "& |methylation difference| >=", 
+    as.character(meth.cut), "%")) +
+  xlab("% Methylation Change")
+
+plot.pancreas
+
+ggplot(data=pancreas.plot, aes(x=meth.diff, y=-log10(qvalue), col=methylation_status, label = external_gene_name)) +
+  geom_point() + 
+  theme_minimal() +
+  scale_color_manual(values=c("mediumblue", "firebrick", "gray")) +
+  geom_vline(xintercept=c(-meth.cut, meth.cut), col="gray57", linetype = "longdash") +
+  geom_hline(yintercept=-log10(qvalue.cut), col="gray57", linetype = "longdash") +
+  geom_text_repel(show.legend = FALSE) +
+  labs(title = "pancreas Differentially Methylated Regions",
+    subtitle =paste("qvalue <", as.character(qvalue.cut), "& |methylation difference| >=", 
+    as.character(meth.cut), "%")) +
+  xlab("% Methylation Change")
+
+```
+
+## CpG regions locations
+
+Sum of CpG regions on islands or shores
+
+```{r}
+# Load the CpG info
+cpg_anot <- readFeatureFlank("C:/Users/MauricioRoza/OneDrive/PhD/Linuron multigenerational/Sequencing analysis/CpG_Xtro10.txt", feature.flank.name = c("CpGi", "shores"), flank=2000)
+
+diffCpGann.pancreas <- annotateWithFeatureFlank(as(myDiff10p.pancreas,"GRanges"), feature = cpg_anot$CpGi, flank = cpg_anot$shores, feature.name = "CpGi", flank.name = "shores")
+
+# See whether the CpG in myDiff10p belong to a CpG Island or Shore
+features.cpgi <- genomation::getMembers(diffCpGann.pancreas)
+apply(features.cpgi, 2, FUN = sum)
+```
+
+Percentage of CpG on Islands, shores or open sea
+
+```{r}
+# This can also be summarized for all differentially methylated CpGs
+genomation::plotTargetAnnotation(diffCpGann.pancreas, main = "Differential Methylation Annotation")
+```
+
+## Differentially Methylated CpG islands
+
+```{r message=FALSE, warning=FALSE}
+# Summarize the original object counts over a certain region, here the CpG Islands
+# You can ignore the warnings here...
+myobj_islands.pancreas <- regionCounts(myobj.pancreas, c(cpg_anot$CpGi, cpg_anot$shores))
+
+# Filter the summarized counts by coverage
+myobj_islands_filt.pancreas <- filterByCoverage(myobj_islands.pancreas,
+                                             lo.count=10,
+                                             lo.perc=NULL,
+                                             hi.count=NULL,
+                                             hi.perc=99.9)
+# Perform simple normalization
+myobj_islands_filt_norm.pancreas <- normalizeCoverage(myobj_islands_filt.pancreas, method = "median")
+
+```
+
+Number of CpG Islands
+
+```{r message=FALSE, warning=FALSE}
+# Merge the samples again
+meth_islands.pancreas <- methylKit::unite(myobj_islands_filt_norm.pancreas, destrand=FALSE, min.per.group = min)
+nrow(meth_islands.pancreas)
+
+# get percent methylation matrix
+pm.pancreas.i=percMethylation(meth_islands.pancreas)
+
+# calculate standard deviation of CpGs
+sds.pancreas.i=matrixStats::rowSds(pm.pancreas.i, na.rm = TRUE)
+
+# Visualize the distribution of the per-CpG standard deviation
+# to determine a suitable cutoff
+hist(sds.pancreas.i, breaks = 100)
+
+# keep only CpG with standard deviations larger than 2%
+meth.pancreas.i <- meth_islands.pancreas[sds.pancreas.i > 2]
+nrow(meth.pancreas.i)
+```
+
+```{r message=FALSE, warning=FALSE}
+# Test for differential methylation... This might take a few minutes.
+myDiff_islands.pancreas <- calculateDiffMeth(meth.pancreas.i,
+                                          overdispersion = "MN",
+                                          adjust="SLIM",
+                                          test = "Chisq")
+
+# Rank by significance
+myDiff_islands.pancreas <- myDiff_islands.pancreas[order(myDiff_islands.pancreas$qvalue),]
+# get all differentially methylated CpG Islands
+myDiff_islands_10p.pancreas <- getMethylDiff(myDiff_islands.pancreas,difference=meth.cut,qvalue=qvalue.cut)
+
+myDiff_islands_10p_ann.pancreas <- annotateWithGeneParts(as((myDiff_islands_10p.pancreas), "GRanges"), ensembl_anot.pancreas)
+# View the distance to the nearest Transcription Start Site; the target.row column indicates the row number in myDiff_islands_10p
+getAssociationWithTSS(myDiff_islands_10p_ann.pancreas) %>% datatable
+```
+
+## Volcano plot Differentially Methylated CpGislands+shores
+
+```{r message=FALSE, warning=FALSE}
+########### CpG Islands annotations
+# convert to genomic ranges
+
+metadata.i <- getData(myDiff_islands_10p.pancreas)
+
+meth_pos.i <- GRanges(
+  seqnames = myDiff_islands_10p.pancreas$chr, 
+  ranges = IRanges(start = myDiff_islands_10p.pancreas$start, end = myDiff_islands_10p.pancreas$end),
+  mcols = metadata.i[, c(5:7)]
+)
+
+res.pancreas.i <- annotatePeakInBatch(meth_pos.i, AnnotationData = xtro, FeatureLocForDistance="TSS", output = "overlapping", multiple = TRUE) %>% data.frame
+
+t.pancreas.i <- res.pancreas.i %>%
+  left_join(
+    dplyr::select(xen.biomart, ensembl_gene_id, external_gene_name, description),
+    by = c("feature" = "ensembl_gene_id"))
+
+t.pancreas.i[,c(6:8,10,14,18:19)] %>% datatable
+
+#plot paramenters
+pancreas.plot.i <- merge(getData(myDiff_islands.pancreas) , t.pancreas.i, all.x = TRUE) %>%
+  mutate(methylation_status = case_when(
+    meth.diff > meth.cut & qvalue < qvalue.cut ~ "Hypermethylated",
+    meth.diff < -meth.cut & qvalue < qvalue.cut ~ "Hypomethylated",
+    TRUE ~ "N.S."
+  ))
+
+ggplot(data=pancreas.plot.i, aes(x=meth.diff, y=-log10(qvalue), col=methylation_status, label = external_gene_name)) +
+  geom_point() + 
+  theme_minimal() +
+  scale_color_manual(values=c("mediumblue", "firebrick", "gray")) +
+  geom_vline(xintercept=c(-meth.cut, meth.cut), col="gray57", linetype = "longdash") +
+  geom_hline(yintercept=-log10(qvalue.cut), col="gray57", linetype = "longdash") +
+  geom_text_repel(show.legend = FALSE) +
+  labs(title = "Differentially Methylated CpG Islands",
+    subtitle =paste("qvalue <", as.character(qvalue.cut), "& |methylation difference| >=", 
+    as.character(meth.cut), "%")) +
+  xlab("% Methylation Change")
+```
+
+## Differentially Methylated Promoter Regions
+
+```{r message=FALSE, warning=FALSE}
+# Summarize the original object counts over a certain region, here the promoter
+# You can ignore the warnings here...
+myobj_promoters.pancreas <- regionCounts(myobj.pancreas, unique(c(ensembl_anot.pancreas$promoters)))
+
+# Filter the summarized counts by coverage
+myobj_promoters_filt.pancreas <- filterByCoverage(myobj_promoters.pancreas,
+                                             lo.count=10,
+                                             lo.perc=NULL,
+                                             hi.count=NULL,
+                                             hi.perc=99.9)
+# Perform simple normalization
+myobj_promoters_filt_norm.pancreas <- normalizeCoverage(myobj_promoters_filt.pancreas, method = "median")
+```
+
+Number of CpG promoters
+
+```{r message=FALSE, warning=FALSE}
+# Merge the samples again
+meth_promoters.pancreas <- methylKit::unite(myobj_promoters_filt_norm.pancreas, destrand=FALSE, min.per.group = min)
+nrow(meth_promoters.pancreas)
+
+# get percent methylation matrix
+pm.pancreas.p=percMethylation(meth_promoters.pancreas)
+
+# calculate standard deviation of CpGs
+sds.pancreas.p=matrixStats::rowSds(pm.pancreas.p, na.rm = TRUE)
+
+# Visualize the distribution of the per-CpG standard deviation
+# to determine a suitable cutoff
+hist(sds.pancreas.p, breaks = 100)
+
+# keep only CpG with standard deviations larger than 2%
+meth.pancreas.p <- meth_promoters.pancreas[sds.pancreas.p > 2]
+nrow(meth.pancreas.p)
+```
+
+```{r message=FALSE, warning=FALSE}
+# Test for differential methylation... This might take a few minutes.
+myDiff_promoters.pancreas <- calculateDiffMeth(meth.pancreas.p,
+                                          overdispersion = "MN",
+                                          adjust="SLIM",
+                                          test = "Chisq")
+
+# Rank by significance
+myDiff_promoters.pancreas <- myDiff_promoters.pancreas[order(myDiff_promoters.pancreas$qvalue),]
+# get all differentially methylated CpG promoters
+myDiff_promoters_10p.pancreas <- getMethylDiff(myDiff_promoters.pancreas,difference=meth.cut,qvalue=qvalue.cut)
+
+myDiff_promoters_10p_ann.pancreas <- annotateWithGeneParts(as((myDiff_promoters_10p.pancreas), "GRanges"), ensembl_anot.pancreas)
+# View the distance to the nearest Transcription Start Site; the target.row column indicates the row number in myDiff_promoters_10p
+tss.dist.promoters <- (getAssociationWithTSS(myDiff_promoters_10p_ann.pancreas))
+hist(tss.dist.promoters$dist.to.feature)
+
+```
+
+## Volcano plot Differentially Methylated Promoters
+
+```{r message=FALSE, warning=FALSE}
+########### CpG promoters annotations
+
+metadata.p <- getData(myDiff_promoters_10p.pancreas)
+
+meth_pos.p <- GRanges(
+  strand = myDiff_promoters_10p.pancreas$strand,
+  seqnames = myDiff_promoters_10p.pancreas$chr, 
+  ranges = IRanges(start = myDiff_promoters_10p.pancreas$start, end = myDiff_promoters_10p.pancreas$end),
+  mcols = metadata.p[, c(5:7)]
+)
+
+res.pancreas.p <- annotatePeakInBatch(meth_pos.p, AnnotationData = xtro, FeatureLocForDistance="TSS", output = "overlapping", multiple = TRUE) %>% data.frame
+
+t.pancreas.p <- res.pancreas.p %>%
+  left_join(
+    dplyr::select(xen.biomart, ensembl_gene_id, external_gene_name, description),
+    by = c("feature" = "ensembl_gene_id"))
+
+t.pancreas.p[,c(6:8,10,14,18:19)] %>% datatable
+
+#plot paramenters
+pancreas.plot.p <- merge(getData(myDiff_promoters.pancreas) , t.pancreas.p, all.x = TRUE) %>%
+  mutate(methylation_status = case_when(
+    meth.diff > meth.cut & qvalue < qvalue.cut ~ "Hypermethylated",
+    meth.diff < -meth.cut & qvalue < qvalue.cut ~ "Hypomethylated",
+    TRUE ~ "N.S."
+  ))
+
+ggplot(data=pancreas.plot.p, aes(x=meth.diff, y=-log10(qvalue), col=methylation_status, label = external_gene_name)) +
+  geom_point() + 
+  theme_minimal() +
+  scale_color_manual(values=c("mediumblue", "firebrick", "gray")) +
+  geom_vline(xintercept=c(-meth.cut, meth.cut), col="gray57", linetype = "longdash") +
+  geom_hline(yintercept=-log10(qvalue.cut), col="gray57", linetype = "longdash") +
+  geom_text_repel(show.legend = FALSE) +
+  labs(title = "Differentially Methylated Promoters",
+    subtitle =paste("qvalue <", as.character(qvalue.cut), "& |methylation difference| >=", 
+    as.character(meth.cut), "%")) +
+  xlab("% Methylation Change")
+
+```
+
+## Gene Ontology
+
+```{r eval=FALSE, include=FALSE}
+library(AnnotationHub)
+hub <- AnnotationHub()
+q <- query(hub, c("org.Xenopus_tropicalis.eg.sqlite","Xenopus tropicalis"))
+q
+q$title
+q$rdataclass
+
+id <- q$ah_id[length(q)]
+Xt <- hub[[id]]
+
+##### Build OrgDb
+
+library(AnnotationForge)
+file.copy(AnnotationHub::cache(hub[id]), "./org.Xenopus_tropicalis.eg.sqlite")
+
+seed <- new("AnnDbPkgSeed", Package = "org.Xt.eg.db", Version = "0.0.1",Author = "Mauricio Roza", Maintainer = "Mauricio Roza <mauricio.roza@aces.su.se>", PkgTemplate = "NOSCHEMA.DB", AnnObjPrefix = "org.Xenopus_tropicalis.eg", organism = "Xenopus tropicalis", species = "Xenopus tropicalis", biocViews = "annotation", manufacturerUrl = "none", manufacturer = "none", chipName = "none")
+makeAnnDbPkg(seed, "org.Xenopus_tropicalis.eg.sqlite")
+
+install.packages("org.Xt.eg.db/", type = "source", repos = NULL, lib = "C:/Users/MauricioRoza/AppData/Local/R/win-library/4.3")
+
+library(org.Xt.eg.db)
+```
+
+
+pancreas Differentially Methylated Regions
+
+```{r error=TRUE, message=FALSE, warning=FALSE}
+library(clusterProfiler)
+library(org.Xt.eg.db)
+
+gene.pancreas <- as.character(res.pancreas$feature) %>% na.omit
+
+gene.pancreas %>% unique %>% length
+
+ggo.pancreas <- groupGO(gene     = gene.pancreas,
+               OrgDb    = org.Xt.eg.db,
+               keyType = "ENSEMBL",
+               ont      = "BP",
+               readable = TRUE)
+
+ggo.pancreas@result %>% datatable
+
+ggo.pancreas %>% filter(., Count > 0) %>% arrange(desc(Count)) %>% barplot(., showCategory = 20)
+
+
+ego.pancreas <- enrichGO(gene          = gene.pancreas,
+                OrgDb         = org.Xt.eg.db,
+                keyType = "ENSEMBL",
+                ont           = "ALL",
+                pAdjustMethod = "BH",
+                pvalueCutoff = 1,
+                qvalueCutoff = 0.5,
+        readable      = TRUE)
+
+data.frame(ego.pancreas) %>% datatable
+
+categorys <- c("neuron differentiation", "neurogenesis", "generation of neurons", "neuron development", "regulation of cell differentiation", "neuron projection guidance")
+
+barplot(ego.pancreas, color = "p.adjust", showCategory = 15, title = "GO enrichment pancreas - Diff meth regions/tiles")
+
+#goplot(ego, showCategory = 10)
+
+```
+
+GSEA
+
+```{r eval=FALSE, include=FALSE}
+# Table overlapping CpG regions with associated genes
+
+library(ChIPpeakAnno)
+
+metadata <- getData(myDiff.pancreas)
+
+meth_pos.pancreas.gsea <- GRanges(
+  seqnames = myDiff.pancreas$chr, 
+  ranges = IRanges(start = myDiff.pancreas$start, end = myDiff.pancreas$end),
+  mcols = metadata[, c(5:7)]
+)
+
+res.pancreas.gsea <- annotatePeakInBatch(meth_pos.pancreas.gsea, AnnotationData = xtro, FeatureLocForDistance="TSS", output = "overlapping", maxgap = 2000, multiple = TRUE) %>% data.frame
+
+t.pancreas.gsea <- res.pancreas.gsea %>%
+  left_join(
+    dplyr::select(xen.biomart, ensembl_gene_id, external_gene_name, description),
+    by = c("feature" = "ensembl_gene_id"))
+
+t.pancreas.gsea <- t.pancreas.gsea[t.pancreas.gsea$mcols.pvalue <= 0.05, ]
+
+geneList.gsea.pancreas <- t.pancreas.gsea$mcols.meth.diff
+names(geneList.gsea.pancreas) <- t.pancreas.gsea$feature
+geneList.gsea.pancreas <- geneList.gsea.pancreas %>% na.omit %>% sort(., decreasing = TRUE)
+
+
+gsea.pancreas <- gseGO(
+  geneList.gsea.pancreas,
+  ont = "ALL",
+  org.Xt.eg.db,
+  keyType = "ENSEMBL",
+  exponent = 1,
+  minGSSize = 10,
+  maxGSSize = 500,
+  eps = 1e-10,
+  pvalueCutoff = 0.05,
+  pAdjustMethod = "BH",
+  verbose = TRUE,
+  seed = FALSE,
+  by = "fgsea"
+)
+
+view(gsea.pancreas@result)
+
+data.frame(gsea.pancreas) %>% datatable
+
+categorys <- c("neuron differentiation", "neurogenesis", "generation of neurons", "neuron development", "regulation of cell differentiation", "neuron projection guidance")
+
+barplot(ego.pancreas, color = "p.adjust", showCategory = 15, title = "GO enrichment pancreas - Diff meth regions/tiles")
+
+#goplot(ego, showCategory = 10)
+
+
+ens.to.entrez <- getBM(attributes = c('ensembl_gene_id', 'entrezgene_id'), 
+              filters = 'ensembl_gene_id', 
+              values = res.pancreas$feature, 
+              mart = mart)
+
+generankkegg <- res.pancreas.gsea %>% data.frame %>% dplyr::select(feature, mcols.meth.diff, mcols.pvalue, mcols.qvalue)
+
+generankkegg <- generankkegg[generankkegg$mcols.pvalue <= 0.05, ]
+
+
+generankkegg <- generankkegg %>%
+  left_join(ens.to.entrez, by = c("feature" = "ensembl_gene_id")) %>%
+  mutate(feature = ifelse(is.na(entrezgene_id), feature, entrezgene_id)) %>%
+  dplyr::select(-entrezgene_id) %>%
+  filter(!grepl("ENS", feature), !is.na(feature))
+
+geneList.gse.kegg.pancreas <- generankkegg$mcols.meth.diff
+names(geneList.gse.kegg.pancreas) <- generankkegg$feature
+
+geneList.gse.kegg.pancreas <- geneList.gse.kegg.pancreas %>% sort(., decreasing = TRUE)
+
+kk2 <- gseKEGG(geneList     = geneList.gse.kegg.pancreas,
+               organism     = 'xtr',
+               pvalueCutoff = 0.05)
+
+View(kk2@result)
+
+library("pathview")
+
+browseKEGG(kk2, 'xtr04130')
+xtr01100
+
+xtr04130 <- pathview(gene.data  = geneList.gse.kegg.pancreas,
+                     pathway.id = "xtr04130",
+                     species    = "xtr",
+                     limit      = list(gene=max(abs(geneList.gse.kegg.pancreas)), cpd=1))
+
+```
+
+
+
+
+Differentially Methylated Promoters
+
+```{r error=TRUE, message=TRUE, warning=TRUE}
+gene.pancreas.prom <- as.character(res.pancreas.p$feature)
+
+
+ggo.pancreas.prom <- groupGO(gene     = gene.pancreas.prom,
+               OrgDb    = org.Xt.eg.db,
+               keyType = "ENSEMBL",
+               ont      = "BP",
+               readable = TRUE)
+
+ggo.pancreas.prom@result %>% datatable
+
+
+ego.pancreas.prom <- enrichGO(gene          = gene.pancreas.prom,
+                OrgDb         = org.Xt.eg.db,
+                keyType = "ENSEMBL",
+                ont           = "ALL",
+                pAdjustMethod = "BH",
+                pvalueCutoff = 0.05,
+                qvalueCutoff = 1,
+        readable      = TRUE)
+data.frame(ego.pancreas.prom) %>% datatable
+
+categorys <- c("neuron differentiation", "neurogenesis", "generation of neurons", "neuron development", "regulation of cell differentiation", "neuron projection guidance")
+
+barplot(ego.pancreas.prom, color = "p.adjust", showCategory = 10, title = "GO enrichment pancreas - Diff meth promoters")
+
+#goplot(ego,pancreas.prom, showCategory = 10)
+```
+
+Differentially methylated Islands
+
+```{r error=TRUE, message=FALSE, warning=FALSE}
+gene.pancreas.i <- as.character(res.pancreas.i$feature)
+
+ggo.pancreas.i <- groupGO(gene     = gene.pancreas.i,
+               OrgDb    = org.Xt.eg.db,
+               keyType = "ENSEMBL",
+               ont      = "BP",
+               readable = TRUE)
+
+ggo.pancreas.i@result %>% datatable
+
+
+ego.pancreas.i <- enrichGO(gene          = gene.pancreas.i,
+                OrgDb         = org.Xt.eg.db,
+                keyType = "ENSEMBL",
+                ont           = "ALL",
+                pAdjustMethod = "BH",
+                pvalueCutoff = 0.05,
+                qvalueCutoff = 1,
+        readable      = TRUE)
+
+data.frame(ego.pancreas.i) %>% datatable
+
+barplot(ego.pancreas.i, color = "p.adjust", showCategory = 10, title = "GO enrichment pancreas - Diff meth islands")
+
+#goplot(ego,pancreas.i, showCategory = 10)
+```
+
+## Enrich KEGG
+
+DMRs
+
+```{r, error=TRUE}
+
+
+entrez.gene.pancreas = getBM(attributes = c('ensembl_gene_id', 'entrezgene_id'), 
+              filters = 'ensembl_gene_id', 
+              values = res.pancreas$feature, 
+              mart = mart)
+
+entrez.gene.pancreas = entrez.gene.pancreas %>% filter(duplicated(ensembl_gene_id) == FALSE)
+
+
+gene.pancreas.kegg <- as.character(entrez.gene.pancreas$entrezgene_id) %>% na.omit
+
+kk.pancreas <- enrichKEGG(gene         = gene.pancreas.kegg,
+                 organism     = 'xtr',
+                 keyType = "ncbi-geneid",
+                 pvalueCutoff = 1,
+                 pAdjustMethod = "BH",
+                 use_internal_data = FALSE)
+
+data.frame(kk.pancreas) %>% datatable
+
+barplot(kk.pancreas, showCategory = 10, title = "KEGG pathways pancreas - pancreas Differentially Methylated Regions (tiles)")
+
+```
+
+Differentially methylated promoters
+
+```{r error=TRUE, message=FALSE, warning=FALSE}
+entrez.gene.pancreas.p = getBM(attributes = c('ensembl_gene_id', 'entrezgene_id'), 
+              filters = 'ensembl_gene_id', 
+              values = res.pancreas.p$feature, 
+              mart = mart)
+
+entrez.gene.pancreas.p = entrez.gene.pancreas.p %>% filter(duplicated(ensembl_gene_id) == FALSE)
+
+gene.pancreas.p <- as.character(entrez.gene.pancreas.p$entrezgene_id) %>% na.omit
+
+kk.pancreas.prom <- enrichKEGG(gene         = gene.pancreas.p,
+                 organism     = 'xtr',
+                 pvalueCutoff = 1,
+                 pAdjustMethod = "BH",
+                 use_internal_data = FALSE)
+
+data.frame(kk.pancreas.prom) %>% datatable
+
+barplot(kk.pancreas.prom, showCategory = 10, title = "KEGG pathways pancreas - Differentially methylated promoters")
+```
+
+Differentially methylated Islands
+
+```{r error=TRUE, message=FALSE, warning=FALSE}
+entrez.gene.pancreas.i = getBM(attributes = c('ensembl_gene_id', 'entrezgene_id'), 
+              filters = 'ensembl_gene_id', 
+              values = res.pancreas.i$feature, 
+              mart = mart)
+
+gene.pancreas.i <- as.character(entrez.gene.pancreas.i$entrezgene_id) %>% na.omit
+
+kk.pancreas.i <- enrichKEGG(gene         = gene.pancreas.i,
+                 organism     = 'xtr',
+                 pvalueCutoff = 0.05,
+                 pAdjustMethod = "BH",
+                 use_internal_data = FALSE)
+
+data.frame(kk.pancreas.i) %>% datatable
+
+barplot(kk.pancreas.i, showCategory = 10)
+```
+
+##Correlation with blood glucose
+
+```{r eval=FALSE, include=FALSE}
+library(readxl)
+blood<- read_excel("C:/Users/MauricioRoza/OneDrive/PhD/Linuron multigenerational/data/Glucose levels/Xtro_F2_lin_glucose.xlsx", sheet = 1)
+str(blood)
+
+#get matrix with % methylation for each individual and transpose
+matrix.meth <- percMethylation(meth.pancreas) %>% 
+  t %>% 
+  data.frame
+
+metadata.all <- getData(myDiff.pancreas)
+
+#add CpG_ID as chr name and start site to identify individual methylater CpG/tile
+myDiff_pancreas.table <- myDiff.pancreas %>% 
+  data.frame %>%
+  mutate(CpG_ID = paste(chr, start, sep = "_"))
+
+#Identify the matrix rows as CpG_ID
+colnames(matrix.meth) <- myDiff_pancreas.table$CpG_ID
+
+#prepare Granges object to overlap CpG with genes
+meth_pos.all <- GRanges(
+  strand = myDiff.pancreas$strand,
+  seqnames = myDiff.pancreas$chr, 
+  ranges = IRanges(start = myDiff.pancreas$start, end = myDiff.pancreas$end),
+  mcols = metadata.all[, c(5:7)]
+)
+
+#overlap
+res.all <- annotatePeakInBatch(meth_pos.all, AnnotationData = xtro, FeatureLocForDistance="TSS", output = "overlapping", multiple = TRUE) %>% data.frame
+
+#add gene names from Biomart
+t.all <- res.all %>%
+  left_join(
+    dplyr::select(xen.biomart, ensembl_gene_id, external_gene_name, description),
+    by = c("feature" = "ensembl_gene_id")) %>%
+    mutate(CpG_ID = paste(seqnames, start, sep = "_"))
+
+#add CpG_ID to differentially methylated regions
+myDiff10p.pancreas.table <- myDiff10p.pancreas %>% 
+  data.frame %>%
+  mutate(CpG_ID = paste(chr, start, sep = "_"))
+
+####
+
+individuals <- rownames(matrix.meth)
+
+t.genes <- t.all %>% na.omit
+
+common_values <- intersect(t.genes$CpG_ID, myDiff10p.pancreas.table$CpG_ID)
+
+
+blood2 <- blood %>%
+  filter((ID %in% gsub("pancreas_","",individuals)))
+
+matrix.diff.meth <- matrix.meth %>%
+    dplyr::select(all_of(common_values))
+
+matrix.diff.meth <- cbind(blood2, matrix.diff.meth)
+
+```
+
+
+## GO terms Metabolic function for the lasso model
+
+```{r eval=FALSE, include=FALSE}
+
+metab.genes <- ggo.pancreas@result["GO:0008152", "geneID"]
+metab.genes <- unlist(strsplit(metab.genes, "/"))
+
+metab.genes.table <- t.all %>% 
+  filter(CpG_ID %in% myDiff10p.pancreas.table$CpG_ID) %>%
+  filter(external_gene_name %in% metab.genes)
+
+blood2 <- blood %>%
+  filter((ID %in% gsub("pancreas_","",individuals)))
+
+matrix.diff.meth <- matrix.meth %>%
+    dplyr::select(all_of(metab.genes.table$CpG_ID))
+
+matrix.diff.meth <- cbind(blood2, matrix.diff.meth)
+
+
+```
+
+
+###Lasso model
+
+```{r eval=FALSE, include=FALSE}
+library(missMDA)
+
+matrix.diff.meth.imp <- matrix.diff.meth[, -(1:6)]
+matrix.diff.meth.imp <- imputePCA(matrix.diff.meth.imp, scale = TRUE)
+matrix.diff.meth.imp <- cbind(matrix.diff.meth[, c(1:6)], matrix.diff.meth.imp$completeObs)
+
+
+x <- model.matrix(`Glucose mmol/L` ~ ., matrix.diff.meth.imp[, -1])[,-(1:5)]
+y <- matrix.diff.meth.imp$`Glucose mmol/L`
+
+set.seed(1)
+
+train <- c(-1, -2, -3, -7, -8, -9)
+test <- (-train)
+y.test <- y[test]
+
+library(glmnet)
+
+
+###
+set.seed(1)
+grid <- 10^seq(1, -2, length = 100)
+cv.out <- cv.glmnet(x[train, ], y[train], alpha = 1, nfolds = 6, lambda = grid)
+cv.out <- cv.glmnet(x, y, alpha = 1, nfolds = 9, lambda = grid)
+cv.out$lambda.min
+
+plot(cv.out)
+
+lasso.mod <- glmnet(x[train, ], y[train], alpha = 1)
+lasso.mod <- glmnet(x, y, alpha = 1)
+
+
+bestlam <- cv.out$lambda.min
+lasso.pred <- predict(lasso.mod, s = bestlam,
+    newx = x[test, ])
+mean((lasso.pred - y.test)^2)
+###
+out <- glmnet(x, y, alpha = 1)
+lasso.coef <- predict(out, type = "coefficients",
+    s = cv.out$lambda.min)[1:111,]
+lasso.coef
+lasso.coef[lasso.coef != 0]
+
+names.lasso <- names(lasso.coef[lasso.coef != 0])[-1]
+names.lasso
+
+result <- subset(t.all, CpG_ID %in% names.lasso)
+result$external_gene_name
+
+```
+
+
+
+
+
+## Relevant genes tables
+
+```{r}
+rlv.genes.pancreas <- c("ep300", "elp3", "kat5", "kat14", #histone acetyltransferase
+                      "lhcgr", "hsd17b12", "esrrg",
+                      "piwil1", "mael", "spo11", "\\bddx4\\b", #spermatogenesis, gonadal development
+                      "dnmt3a"
+)
+
+rlv.genes.table.pancreas <- t.pancreas %>%
+   filter(str_detect(external_gene_name, paste(rlv.genes.pancreas, collapse = "|")))
+
+geneparts.anot.pancreas <- annotateWithGeneParts(target = as(rlv.genes.table.pancreas,"GRanges"),
+                                              feature = ensembl_anot.pancreas, intersect.chr = TRUE, strand = TRUE)
+
+feature.pancreas <- genomation::getMembers(geneparts.anot.pancreas)
+
+feature.pancreas <- feature.pancreas %>% data.frame %>%
+  mutate(location = case_when(
+    prom == 1 ~ "promoter",
+    exon == 1 ~ "exon",
+    intron == 1 ~ "intron",
+    TRUE ~ "intergenic"
+  ))
+
+rlv.genes.table.pancreas <- rlv.genes.table.pancreas %>%
+  bind_cols(DMR_location = feature.pancreas[,4])
+
+rlv.genes.table.pancreas.final <- rlv.genes.table.pancreas %>%
+  dplyr::select(c(gene = "external_gene_name",
+                "DMR_location",
+                methylation_difference = "mcols.meth.diff",
+                q.value = "mcols.qvalue",
+                chromosome = "seqnames",
+                "start", "end",
+                strand = "feature_strand",
+                "description"
+                )) %>%
+      arrange(factor(gene, levels = c(
+                      "piwil1", "mael", "spo11", "ddx4", #spermatogenesis, gonadal development
+                      "dnmt3a", "ep300", "elp3", "kat5", "kat14", #histone acetyltransferase, methylation
+                      "hsd17b12", "esrrg")))
+
+rlv.genes.table.pancreas.final$description <- str_replace(rlv.genes.table.pancreas.final$description , " \\s*\\[[^\\)]+\\]", "")
+
+
+
+
+```
+
+
+## Supplementary tables
+
+```{r eval=FALSE}
+library(writexl)
+
+DMR_genes <- list("pancreas" = t.pancreas)
+GO_terms <- list("pancreas" = ggo.pancreas@result)
+GO_enrich <- list("pancreas" = data.frame(ego.pancreas))
+KEGG_enrich <- list("Brain" = df.kk.brain)
+
+write_xlsx(DMR_genes, path = "../supplementary_material_tables/S1_DMR_and_overlapping_genes.xlsx")
+write_xlsx(GO_terms, path = "../supplementary_material_tables/S2_GO_terms.xlsx")
+write_xlsx(GO_enrich, path = "../supplementary_material_tables/S3_GO_enrichment.xlsx")
+write_xlsx(KEGG_enrich, path = "../supplementary_material_tables/S4_KEGG_enrichment.xlsx")
+
+
+
+write_excel_csv(t.pancreas, file = "../supplementary_material_tables/S2_pancreas_DMR_and_overlapping_genes.csv", quote = "none", delim = '\t', col_names = TRUE, na = "", eol = "\r\n")
+
+
+write_excel_csv(ggo.pancreas@result, file = "../supplementary_material_tables/S4_pancreas_GO_terms.csv", quote = "none", delim = '\t', col_names = TRUE, na = "", eol = "\r\n")
+
+write_excel_csv(data.frame(ego.pancreas), file = "../supplementary_material_tables/S6_pancreas_GO_gene_enrichment.csv", quote = "none", delim = '\t', col_names = TRUE, na = "", eol = "\r\n")
+
+```
+
+## Paper plots
+
+```{r eval=FALSE, include=FALSE}
+#DMRs
+
+pancreas.plot$methylation_status <- factor(pancreas.plot$methylation_status, levels = c("Hypomethylated", "Hypermethylated", "N.S."))
+
+
+plot.pancreas <- ggplot(data=pancreas.plot, aes(x=meth.diff, y=-log10(qvalue), col=methylation_status)) +
+  geom_point() + 
+  theme_minimal() +
+  scale_color_manual(values=c("mediumblue", "firebrick", "gray")) +
+  geom_vline(xintercept=c(-meth.cut, meth.cut), col="gray57", linetype = "longdash") +
+  geom_hline(yintercept=-log10(qvalue.cut), col="gray57", linetype = "longdash") +
+  xlab("% Methylation Change") +
+  theme(legend.title=element_blank()) +
+  ylim(0,95)
+
+
+
+################################
+
+GOpancreas <- ggo.pancreas %>% filter(., Count > 0) %>% arrange(desc(Count)) %>% barplot(., showCategory = 20)
+GOpancreas <- GOpancreas + scale_fill_manual(values = c(rep("blue", 20)))
+
+
+figure2 <- ggarrange(
+  GObrain, 
+  GOpancreas,
+  nrow = 1,
+  ncol = 2,
+  labels = c("Brain", "pancreas")
+  )
+
+figure2
+
+#Gene enrichment
+
+gsea.pancreas <- barplot(ego.pancreas, color = "p.adjust", showCategory = 15)
+
+
+#CpG locations
+
+pancreas.cpg <- myDiff10p.anot.pancreas@precedence %>% 
+  data.frame %>%
+  rownames_to_column(., var = "location")
+pancreas.cpg$location <- 
+  factor(pancreas.cpg$location, 
+         levels = c("promoter", "exon", "intron", "intergenic"))
+
+pie.pancreas <- pancreas.cpg %>% 
+  arrange(desc(location)) %>%
+  mutate(prop = . / sum(pancreas.cpg$.) *100) %>%
+  mutate(ypos = cumsum(prop)- 0.5*prop ) %>%
+  mutate(round = round(., digits = 0))
+
+pie.graph.pancreas <- ggplot(pie.pancreas, aes(x="", y=prop, fill=location)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  theme(legend.position="right") +
+  geom_text(aes(y = ypos, label = paste(round, "%")), color = "black", size=5) +
+  scale_fill_brewer(palette="Dark2") +
+  theme(legend.title=element_blank())
+
+
+#KEGG
+
+kegg.brain <- kk.brain %>% filter(., Count > 0) %>% arrange(desc(Count)) %>% barplot(., showCategory = 20, title = "KEGG Pathways Enrichment - Brain")
+
+
+#Save all figures
+
+ggsave("../figures/Figure1_volcano_piechart.tiff", 
+       figure5,  
+       scale = 1.5, 
+       dpi = 300,
+       width = 15,
+       height = 15,
+       units = "cm")
+
+ggsave("../figures/Figure2_GO_BF.tiff", 
+       figure2,  
+       scale = 2, 
+       dpi = 300,
+       width = 15,
+       height = 10,
+       units = "cm")
+
+ggsave("../figures/Figure3_GO_gsea.tiff", 
+       figure3,  
+       scale = 1.5, 
+       dpi = 300,
+       width = 15,
+       height = 15,
+       units = "cm")
+
+ggsave("../figures/Figure4_kegg.tiff", 
+       kegg.brain,  
+       scale = 1.5, 
+       dpi = 300,
+       width = 15,
+       height = 10,
+       units = "cm")
+
+```
+
+```{r eval=FALSE, include=FALSE}
+#volcano plot showing important genes
+
+#pancreas
+important.genes.pancreas <- data.frame(
+  genes = c("ep300", "elp3", "kat5", "kat14", #histone acetyltransferase
+                      "hsd17b12", "esrrg",
+                      "piwil1", "mael", "spo11", "\\bddx4\\b", #spermatogenesis, gonadal development
+                      "dnmt3a"
+)
+) %>% mutate(genes1 = genes)
+
+
+volcano.gene.labels.pancreas <- merge(pancreas.plot, important.genes.pancreas, by.x="external_gene_name", by.y = "genes1", all.x = TRUE)
+
+
+  
+imp.genes.plot.pancreas <- ggplot(data=volcano.gene.labels.pancreas, aes(x=meth.diff, y=-log10(qvalue), col=methylation_status, label = genes)) +
+  geom_point() + 
+  theme_minimal() +
+  scale_color_manual(values=c("mediumblue", "firebrick", "gray")) +
+  geom_vline(xintercept=c(-meth.cut, meth.cut), col="gray57", linetype = "longdash") +
+  geom_hline(yintercept=-log10(qvalue.cut), col="gray57", linetype = "longdash") +
+  geom_text_repel(data = subset(volcano.gene.labels.pancreas, methylation_status != "N.S."),
+                  color = "black",
+                    show.legend = FALSE, 
+                  nudge_y = 50, max.overlaps = 20, size=5, force = 5,
+                  box.padding = 2,
+                  segment.colour = "gray") +
+  labs(title = "pancreas Differentially Methylated Regions",
+    subtitle =paste("qvalue <", as.character(qvalue.cut), "& |methylation difference| >=", 
+    as.character(meth.cut), "%")) +
+  xlab("% Methylation Change") +
+  ylim(0, 95)
+
+imp.genes.plot.pancreas
+
+
+ggsave("../figures/volcano_pancreas.tiff", 
+       imp.genes.plot.pancreas,  
+       scale = 1.5, 
+       dpi = 300,
+       width = 15,
+       height = 10,
+       units = "cm")
+
+```
+
+```{r eval=FALSE}
+# List all objects in the R environment
+objects <- ls()
+
+# Loop over all objects and remove only those larger than 100MB
+for (object in objects) {
+  size_mb <- object.size(get(object)) / 2^20  # Calculate size in MB
+  if (size_mb > 50) {
+    message(paste("Removing object", object, "of size", size_mb, "MB"))
+    rm(list=object, envir=.GlobalEnv)  # Remove object from global environment
+  }
+}
+```
+

@@ -1,0 +1,246 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.kegg.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- Creation date: May 6, 2021 16:22:38 +0900 (GMT+9) -->
+<pathway name="path:xtr04130" org="xtr" number="04130"
+         title="SNARE interactions in vesicular transport"
+         image="https://www.kegg.jp/kegg/pathway/xtr/xtr04130.png"
+         link="https://www.kegg.jp/kegg-bin/show_pathway?xtr04130">
+    <entry id="45" name="xtr:780363" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:780363">
+        <graphics name="bnip1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="354" y="727" width="46" height="17"/>
+    </entry>
+    <entry id="46" name="xtr:100145610" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100145610">
+        <graphics name="use1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="354" y="710" width="46" height="17"/>
+    </entry>
+    <entry id="47" name="xtr:549463" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:549463">
+        <graphics name="stx18" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="354" y="693" width="46" height="17"/>
+    </entry>
+    <entry id="48" name="ko:K08491" type="ortholog"
+        link="https://www.kegg.jp/dbget-bin/www_bget?K08491">
+        <graphics name="K08491" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="254" y="696" width="46" height="17"/>
+    </entry>
+    <entry id="49" name="xtr:100379730 xtr:101730635 xtr:549196" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100379730+xtr:101730635+xtr:549196">
+        <graphics name="bet1l..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="234" y="646" width="46" height="17"/>
+    </entry>
+    <entry id="50" name="xtr:394619" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:394619">
+        <graphics name="ykt6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="330" y="564" width="46" height="17"/>
+    </entry>
+    <entry id="51" name="xtr:548699" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:548699">
+        <graphics name="gosr1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="330" y="547" width="46" height="17"/>
+    </entry>
+    <entry id="52" name="xtr:493353" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:493353">
+        <graphics name="stx5" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="330" y="530" width="46" height="17"/>
+    </entry>
+    <entry id="53" name="xtr:394761" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:394761">
+        <graphics name="sec22b" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="281" y="564" width="46" height="17"/>
+    </entry>
+    <entry id="54" name="xtr:100135400" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100135400">
+        <graphics name="gosr2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="281" y="547" width="46" height="17"/>
+    </entry>
+    <entry id="55" name="xtr:493353" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:493353">
+        <graphics name="stx5" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="281" y="530" width="46" height="17"/>
+    </entry>
+    <entry id="56" name="xtr:394585" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:394585">
+        <graphics name="snap29" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="330" y="453" width="46" height="17"/>
+    </entry>
+    <entry id="57" name="xtr:734102" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:734102">
+        <graphics name="stx6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="281" y="473" width="46" height="17"/>
+    </entry>
+    <entry id="58" name="xtr:100493473" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100493473">
+        <graphics name="stx16" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="281" y="453" width="46" height="17"/>
+    </entry>
+    <entry id="59" name="xtr:493509 xtr:549424" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:493509+xtr:549424">
+        <graphics name="stx11..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="281" y="433" width="46" height="17"/>
+    </entry>
+    <entry id="60" name="xtr:394619" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:394619">
+        <graphics name="ykt6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="457" y="409" width="46" height="17"/>
+    </entry>
+    <entry id="61" name="xtr:549714 xtr:779677" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:549714+xtr:779677">
+        <graphics name="vti1b..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="546" y="384" width="46" height="17"/>
+    </entry>
+    <entry id="62" name="xtr:496624" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:496624">
+        <graphics name="stx8" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="546" y="367" width="46" height="17"/>
+    </entry>
+    <entry id="63" name="xtr:100379927" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100379927">
+        <graphics name="stx7" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="546" y="350" width="46" height="17"/>
+    </entry>
+    <entry id="64" name="xtr:549651" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:549651">
+        <graphics name="vamp4" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="392" y="198" width="46" height="17"/>
+    </entry>
+    <entry id="65" name="xtr:116406434" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:116406434">
+        <graphics name="116406434" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="377" y="165" width="46" height="17"/>
+    </entry>
+    <entry id="66" name="xtr:100135161" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100135161">
+        <graphics name="snap23" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="302" y="167" width="46" height="17"/>
+    </entry>
+    <entry id="67" name="ko:K08506" type="ortholog"
+        link="https://www.kegg.jp/dbget-bin/www_bget?K08506">
+        <graphics name="K08506" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="305" y="710" width="46" height="17"/>
+    </entry>
+    <entry id="68" name="xtr:100135161" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100135161">
+        <graphics name="snap23" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="154" y="200" width="46" height="17"/>
+    </entry>
+    <entry id="69" name="xtr:100124935 xtr:100494194 xtr:493473 xtr:549026 xtr:779637 xtr:780101" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100124935+xtr:100494194+xtr:493473+xtr:549026+xtr:779637+xtr:780101">
+        <graphics name="stx1b..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="257" y="167" width="46" height="17"/>
+    </entry>
+    <entry id="70" name="xtr:100124935 xtr:100494194 xtr:493473 xtr:549026 xtr:779637 xtr:780101" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100124935+xtr:100494194+xtr:493473+xtr:549026+xtr:779637+xtr:780101">
+        <graphics name="stx1b..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="109" y="200" width="46" height="17"/>
+    </entry>
+    <entry id="71" name="path:xtr04130" type="map"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr04130">
+        <graphics name="TITLE:SNARE interactions in vesicular transport" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="228" y="58" width="375" height="25"/>
+    </entry>
+    <entry id="113" name="ko:K08505" type="ortholog"
+        link="https://www.kegg.jp/dbget-bin/www_bget?K08505">
+        <graphics name="K08505" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="433" y="457" width="46" height="17"/>
+    </entry>
+    <entry id="114" name="xtr:394761" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:394761">
+        <graphics name="sec22b" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="429" y="644" width="46" height="17"/>
+    </entry>
+    <entry id="115" name="xtr:549651" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:549651">
+        <graphics name="vamp4" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="291" y="260" width="46" height="17"/>
+    </entry>
+    <entry id="116" name="xtr:549039" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:549039">
+        <graphics name="vamp8" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="162" y="335" width="46" height="17"/>
+    </entry>
+    <entry id="117" name="xtr:100127560 xtr:394628 xtr:549726" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100127560+xtr:394628+xtr:549726">
+        <graphics name="vamp1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="143" y="297" width="46" height="17"/>
+    </entry>
+    <entry id="118" name="xtr:100216181" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100216181">
+        <graphics name="vamp7" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="415" y="356" width="46" height="17"/>
+    </entry>
+    <entry id="126" name="xtr:100493473" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:100493473">
+        <graphics name="stx16" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="460" y="218" width="46" height="17"/>
+    </entry>
+    <entry id="127" name="xtr:734102" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:734102">
+        <graphics name="stx6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="460" y="235" width="46" height="17"/>
+    </entry>
+    <entry id="128" name="xtr:549714 xtr:779677" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?xtr:549714+xtr:779677">
+        <graphics name="vti1b..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="460" y="252" width="46" height="17"/>
+    </entry>
+    <entry id="129" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="131" y="200" width="91" height="17"/>
+        <component id="68"/>
+        <component id="70"/>
+    </entry>
+    <entry id="130" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="279" y="167" width="91" height="17"/>
+        <component id="66"/>
+        <component id="69"/>
+    </entry>
+    <entry id="131" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="460" y="235" width="46" height="51"/>
+        <component id="126"/>
+        <component id="127"/>
+        <component id="128"/>
+    </entry>
+    <entry id="132" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="546" y="367" width="46" height="51"/>
+        <component id="61"/>
+        <component id="62"/>
+        <component id="63"/>
+    </entry>
+    <entry id="133" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="281" y="547" width="46" height="51"/>
+        <component id="53"/>
+        <component id="54"/>
+        <component id="55"/>
+    </entry>
+    <entry id="134" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="354" y="710" width="46" height="51"/>
+        <component id="45"/>
+        <component id="46"/>
+        <component id="47"/>
+    </entry>
+    <relation entry1="117" entry2="129" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="115" entry2="130" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="64" entry2="131" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="60" entry2="132" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="49" entry2="133" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="114" entry2="134" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+</pathway>
