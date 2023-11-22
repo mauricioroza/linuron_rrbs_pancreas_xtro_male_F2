@@ -9,29 +9,6 @@ meth_diff <- calculateDiffMeth(meth_filtered,
                                test = "Chisq"
                                )
 
-# Change chromosome names
-chr_alias <- readRDS("./annotations/Xtro_chromAlias.txt")
-
-chr_alias <- chr_alias[1:10,]
-
-meth_diff$chr <- as.character(meth_diff$chr)
-
-rows_to_remove <- c()
-
-for (i in 1:length(meth_diff$chr)) {
-  matching_index <- which(chr_alias$genbank == meth_diff$chr[i])
-  if (length(matching_index) > 0) {
-    meth_diff$chr[i] <- chr_alias$ucsc[matching_index]
-  } else {
-    rows_to_remove <- c(rows_to_remove, i)
-  }
-}
-
-# remove DMRs located in scaffolds 
-meth_diff <- meth_diff[-rows_to_remove, ]
-
-meth_diff$chr <- as.factor(meth_diff$chr)
-
 
 #Save data in RData file
 meth_diff_dir <- paste0("./data/meth_diff_",file_path_name,".rds")

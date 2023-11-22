@@ -6,8 +6,6 @@ analysis_name <- "Differentially Methylated Regions"
 
 analysis_object <- "CpG tiles"
 
-myobj <- read_bismark_coverage(control_path, control_sample, lin_path, lin_sample)
-
 params <- list(min_n = 4L, meth_cut = 10L, qvalue_cut = 0.05, 
                analysis = "tiles", tiling_window = "100", tiling_step = "100")
 

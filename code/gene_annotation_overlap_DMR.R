@@ -35,6 +35,9 @@ xtro <- getAnnotation(mart, featureType = "TSS")
 # Annotate DMRs with overlapping genes and promoters
 res <- annotatePeakInBatch(meth_pos, AnnotationData = xtro, FeatureLocForDistance="TSS", output = "overlapping", maxgap = 2000, multiple = TRUE) %>% data.frame
 
+# Remove scaffolds
+res <- res %>% dplyr::filter(seqnames %in% paste0("chr", 1:10))
+
 # Add gene names and description to the table
 dmr_table_genes <- res %>%
   left_join(

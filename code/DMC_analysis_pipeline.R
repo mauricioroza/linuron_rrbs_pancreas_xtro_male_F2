@@ -2,11 +2,11 @@ analysis_name <- "Differentially Methylated Cytosines"
 
 source("code/read_bismark_coverage.R")
 
-analysis_name <- "Differentially Methylated Regions Male"
+analysis_name <- "Differentially Methylated Cytosines Male"
 
 analysis_object <- "CpG sites"
 
-myobj <- read_bismark_coverage(control_male_path, control_male_sample, imz_male_path, imz_male_sample)
+myobj <- read_bismark_coverage(control_path, control_sample, lin_path, lin_sample)
 
 params <- list(min_n = 4L, meth_cut = 10L, qvalue_cut = 0.05, 
                group = "male", analysis = "CpGs", tiling_window = "", tiling_step = "")

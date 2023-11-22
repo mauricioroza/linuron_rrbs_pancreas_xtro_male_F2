@@ -35,10 +35,14 @@ read_bismark_coverage <- function(group1_path, group1_names, group2_path, group2
   )
 }
 
-# myobj <- read_bismark_coverage(control_path, control_sample, imz_path, imz_sample)
-# myobj <- read_bismark_coverage(male_path, male_sample, female_path, female_sample)
-# myobj <- read_bismark_coverage(control_male_path, control_male_sample, imz_male_path, imz_male_sample)
+myobj <- read_bismark_coverage(control_path, control_sample, lin_path, lin_sample)
 
+chr.alias <- read.table("annotations/Xtro_chromAlias.txt", header = TRUE)
 
-# Summarize methylated/unmethylated base counts over 100bp tilling windows accross genome
-# myobj.tile <- tileMethylCounts(myobj.brain, win.size = 100, step.size = 100)
+chr.name1 <- as.list(chr.alias$genbank)
+chr.name2 <- as.list(chr.alias$ucsc)
+
+for(i in 1:length(myobj)){
+  for(x in 1:length(chr.name1)){
+    myobj[[i]]$chr[myobj[[i]]$chr == chr.name1[[x]]] <- chr.name2[[x]]
+  }}
