@@ -8,3 +8,7 @@
 *.rds
 
 *.tiff
+/.quarto/
+*.html
+*_files/
+*_cache/

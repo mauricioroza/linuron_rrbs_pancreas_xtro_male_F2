@@ -2,11 +2,6 @@ if (!require("circlize", quietly = TRUE)){
   install.packages("circlize")
 }
 
-# circos require the Chr names with lower case c
-substitute_chr <- function(df) {
-  df$chr <- gsub("C", "c", df$chr)
-  return(df)
-}
 
 # prepare data frames with hypo and hyper methylated regions
 
@@ -21,7 +16,6 @@ DMR_hypo <- data.frame("chr" = meth_diff_cut_hypo$chr,
                        "meth.diff" = meth_diff_cut_hypo$meth.diff)
 
 bed_list <- list(DMR_hyper, DMR_hypo)
-bed_list <- lapply(bed_list, substitute_chr)
 
 ####All DMRs
 # prepare data frame with all DMR with qvalue lower than the cut
@@ -32,8 +26,6 @@ DMR_all <- data.frame("chr" = all_DMRs$chr,
                       "start" = all_DMRs$start,
                       "end" = all_DMRs$end,
                       "meth.diff" = all_DMRs$meth.diff)
-
-DMR_all <- substitute_chr(DMR_all)
 
 
 # prepare data frame with selected genes that you want to highlight in the plot

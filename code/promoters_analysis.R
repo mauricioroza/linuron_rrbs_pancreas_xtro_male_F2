@@ -9,6 +9,14 @@ if (!file.exists(ensembl_gtf2bed12_file)) {
   source("code/chromAlias_gtf2bed12.R")
 }
 
+martfile <- c("./annotations/biomart_xenTro10.RData")
+
+if (!file.exists(martfile)) {
+  source("code/xenTro_biomart_table.R")
+}
+
+load(martfile)
+
 # ensembl_anot <- readTranscriptFeatures(ensembl_gtf2bed12_file, up.flank = 2000, down.flank = 0) # 2000bp flank regions correspond to promoters.
 # 
 # # Analysis of promoter regions

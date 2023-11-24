@@ -11,8 +11,6 @@ if (!require("writexl", quietly = TRUE)) {
 }
 
 
-gene_list <- as.character(res$feature)
-
 gene_ontology <- function(gene_list, meth_status) {
 
   message(paste0("Analysing ", meth_status, " genes..."))
@@ -69,32 +67,43 @@ gene_ontology <- function(gene_list, meth_status) {
   
   if (nrow(go_overrep_df) == 0) {
     print(paste0("No significant GO terms over-represented for ", meth_status, " genes under qvalue cut = ", go_overrep@qvalueCutoff))
-    return(NULL)
+    
+    go_overrep <- paste0("No significant GO terms over-represented")
+    go_overrep_table <- paste0("No significant GO terms over-represented")
+    go_overrep_barplot <- paste0("No significant GO terms over-represented")
+    
+    assign(paste0("go_overrep_", meth_status), go_overrep, envir = .GlobalEnv)
+    assign(paste0("go_overrep_table_", meth_status), go_overrep_table, envir = .GlobalEnv)
+    assign(paste0("go_overrep_barplot_", meth_status), go_overrep_barplot, envir = .GlobalEnv)
+    
   } else {
     print(paste0(nrow(go_overrep_df), " significant GO terms over-represented found for ", meth_status, " genes under qvalue cut = ", go_overrep@qvalueCutoff))
     
+    go_overrep_table <- data.frame(go_overrep) %>% datatable
+    
+    go_overrep_barplot <- barplot(go_overrep, color = "qvalue", showCategory = 10, title = paste0("GO Over-representation ", analysis_name, " ", meth_status))
+    go_overrep_barplot
+    
+    
+    assign(paste0("go_overrep_", meth_status), go_overrep, envir = .GlobalEnv)
+    assign(paste0("go_overrep_table_", meth_status), go_overrep_table, envir = .GlobalEnv)
+    assign(paste0("go_overrep_barplot_", meth_status), go_overrep_barplot, envir = .GlobalEnv)
   }
   
-  go_overrep_table <- data.frame(go_overrep) %>% datatable
-  
-  go_overrep_barplot <- barplot(go_overrep, color = "qvalue", showCategory = 10, title = paste0("GO Over-representation ", analysis_name, " ", meth_status))
-  go_overrep_barplot
+  print(meth_status)
 
   # Save objects to local environment
   assign(paste0("ggo_plot_", meth_status), ggo_plot, envir = .GlobalEnv)
   assign(paste0("ggo_result_", meth_status), ggo_result, envir = .GlobalEnv)
   assign(paste0("ggo_table_", meth_status), ggo_table, envir = .GlobalEnv)
-  assign(paste0("go_overrep_", meth_status), go_overrep, envir = .GlobalEnv)
-  assign(paste0("go_overrep_table_", meth_status), go_overrep_table, envir = .GlobalEnv)
-  assign(paste0("go_overrep_barplot_", meth_status), go_overrep_barplot, envir = .GlobalEnv)
-  
+
   }
 
 # All
 
-gene_list <- as.character(res$feature)
+gene_list <- res
 
-gene_ontology(gene_list, "all")
+gene_ontology(gene_list$feature, "all")
 
 # Hypo
 
@@ -108,11 +117,22 @@ hyper_genes <- res %>% dplyr::filter(mcols.meth.diff > meth_cut)
 
 gene_ontology(hyper_genes$feature, "hyper")
 
+# Promoters
+
+prom_genes <- feature_sum_annot %>% dplyr::filter(prom == 1)
+gene_ontology(prom_genes$feature, "prom_all")
+
+prom_hypo <- prom_genes %>% dplyr::filter(mcols.meth.diff < -meth_cut)
+gene_ontology(prom_hypo$feature, "prom_hypo")
+
+prom_hyper <- prom_genes %>% dplyr::filter(mcols.meth.diff > meth_cut)
+gene_ontology(prom_hyper$feature, "prom_hyper")
+
 # save plots 
 
 save_ggplot <- function (plot_name) {
   
-  if (exists(paste0(deparse(substitute(plot_name))))) {
+  if (exists(paste0(deparse(substitute(plot_name)))) & !is.character(plot_name)) {
   ggsave(filename = paste0(deparse(substitute(plot_name)),"_", file_path_name, ".tiff"),
          path = "./figures/",
          plot = plot_name,
@@ -134,7 +154,7 @@ save_ggplot(go_overrep_barplot_hypo)
 # save tables
 
 save_table <- function(table_name) {
-  if (exists(paste0(deparse(substitute(table_name))))) {
+  if (exists(paste0(deparse(substitute(table_name)))) & !is.character(table_name)) {
     
     write_xlsx(data.frame(table_name), path = paste0("./tables/", deparse(substitute(table_name)),"_", file_path_name, ".xlsx"))
     

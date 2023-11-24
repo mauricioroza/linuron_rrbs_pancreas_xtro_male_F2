@@ -45,3 +45,7 @@ meth_diff_cut_hyper <- getMethylDiff(meth_diff,
 meth_diff_cut <- meth_diff_cut[order(meth_diff_cut$qvalue),]
 
 nrow_meth_diff_cut <- nrow(meth_diff_cut)
+
+nrow_hypo <- nrow(meth_diff_cut_hypo)
+
+nrow_hyper <- nrow(meth_diff_cut_hyper)

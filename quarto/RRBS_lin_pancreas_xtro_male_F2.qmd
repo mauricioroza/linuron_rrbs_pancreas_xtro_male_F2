@@ -1,6 +1,6 @@
 ---
-title: "*Xenopus tropicalis* juveniles liver DNA Methylation"
-subtitle: "Analysis of differential methylation in *X. tropicalis* frogs liver after exposure to the fungicide Imazalil"
+title: "*Xenopus tropicalis* Pancreas F2 DNA Methylation"
+subtitle: "Analysis of differential methylation in *X. tropicalis* male frogs pancreas after exposure to Linuron"
 author: 
   - name: Mauricio Roza
     email: "Mauricio.Roza@aces.su.se"
@@ -45,7 +45,6 @@ params:
   min_n: 4
   meth_cut: 10
   qvalue_cut: 0.05
-  group: "male"
   analysis: "CpGs"
   tiling_window: ""
   tiling_step: ""
@@ -120,48 +119,25 @@ Here the Bismark Coverage files paths and sample names are organized in groups f
 
 **Select the groups for analysis**
 
-Here I set the `analysis_name` to show up in the graphs titles further in the pipeline. `myobj` sets which groups are being compared. In this case, male control vs male IMZ
+Here I set the `analysis_name` to show up in the graphs titles further in the pipeline.
 
 ```{r}
 #| warning: false
 file_path_name <- paste0(params$group, "_cut_", params$meth_cut, "_", params$analysis, params$tiling_window)
 
-
-if (params$group == "male") {
-  myobj <- read_bismark_coverage(control_male_path, control_male_sample, imz_male_path, imz_male_sample)
-  name_obj <- "Male"
-}
-
-if (params$group == "female") {
-  myobj <- read_bismark_coverage(control_female_path, control_female_sample, imz_female_path, imz_female_sample)
-  name_obj <- "Female"
-}
-
-if (params$group == "all") {
-  myobj <- read_bismark_coverage(control_path, control_sample, imz_path, imz_sample)
-  name_obj <- "All Ctr vs IMZ"
-}
-
-if (params$group == "male_vs_female") {
-  read_bismark_coverage(male_path, male_sample, female_path, female_sample)
-  name_obj <- "All Male vs Female"
-}
-```
-
-```{r}
 if (params$analysis == "promoter") {
   source("code/promoters_analysis.R")
   analysis_object <- "Promoters"
-  analysis_name <- paste0("Diff. Methylated Promoters: ", name_obj)
+  analysis_name <- paste0("Diff. Methylated Promoters: ")
 
   } else if (params$analysis == "tiles") {
   myobj <- tileMethylCounts(myobj, win.size = params$tiling_window, step.size = params$tiling_step)
   analysis_object <- "DMRs"
-  analysis_name <- paste0("Diff. Methylated Regions: ", name_obj)
+  analysis_name <- paste0("Diff. Methylated Regions: ")
 
   } else {
   analysis_object <- "CpG sites"
-  analysis_name <- paste0("Diff. Methylated CpGs: ", name_obj)
+  analysis_name <- paste0("Diff. Methylated CpGs: ")
 }
 ```
 :::
@@ -313,6 +289,9 @@ hist(meth_diff$meth.diff, main = "% Methylation Distribution")
 `r analysis_object` were considered differentially methylated when the FDR corrected p-value (q-value) was lower than **`r  qvalue_cut`** and the methylation difference compared with control was higher than **`r  meth_cut`%**
 
 From **`r nrow_meth_diff`** `r analysis_object` analysed, **`r nrow_meth_diff_cut`** are differentially methylated and overlapped with **`r feature_sum_annot$feature |> unique() |> length()`** genes.
+**`r nrow_hypo`** hypomethylated 
+**`r nrow_hyper`** hypermethylated 
+
 
 **`r gen_regions$promoter`** are located in promoters, **`r gen_regions$exon`** in exons, **`r gen_regions$intron`** in introns, and **`r gen_regions$intergenic`** in intergenic regions.
 
@@ -398,58 +377,19 @@ plot_genomic_location()
 #| output: false
 ```
 
-::: {.callout-note collapse="true"}
-# GO tables
+## GO grouping Biological Function
 
-## GO Biological Function
-**All**
+### All
+::: {.callout-note collapse="true"}
+#### Table all
+
 ```{r}
 #| error: true
 
 ggo_table_all
 ```
 
-**Hypermethylated**
-```{r}
-#| error: true
-
-ggo_table_hyper
-```
-
-**Hypomethylated**
-```{r}
-#| error: true
-
-ggo_table_hypo
-```
-## GO Over-representation
-
-**All**
-
-```{r}
-#| error: true
-
-go_overrep_table_all
-```
-
-**Hypermethylated**
-```{r}
-#| error: true
-
-go_overrep_table_hyper
-```
-
-**Hypomethylated**
-```{r}
-#| error: true
-
-go_overrep_table_hypo
-```
-
-
 :::
-
-**All**
 
 ```{r}
 #| echo: true
@@ -460,10 +400,18 @@ go_overrep_table_hypo
 
 ggo_plot_all
 
-go_overrep_barplot_all
 ```
 
-**Hypermethylated**
+### Hypomethylated
+
+::: {.callout-note collapse="true"}
+#### Table Hypo
+```{r}
+#| error: true
+
+ggo_table_hypo
+```
+:::
 
 ```{r}
 #| echo: true
@@ -474,10 +422,18 @@ go_overrep_barplot_all
 
 ggo_plot_hyper
 
-go_overrep_barplot_hyper
 ```
 
-**Hypomethylated**
+### Hypermethylated
+
+::: {.callout-note collapse="true"}
+#### Table Hyper
+```{r}
+#| error: true
+
+ggo_table_hyper
+```
+:::
 
 ```{r}
 #| echo: true
@@ -486,10 +442,143 @@ go_overrep_barplot_hyper
 #| fig-height: 8
 #| error: true
 
-ggo_plot_hypo
+ggo_plot_hyper
+
+```
+
+## GO Over-representation
+
+### All
+::: {.callout-note collapse="true"}
+#### Promoters Table all
+```{r}
+#| error: true
+
+go_overrep_table_all
+```
+:::
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+go_overrep_barplot_all
+```
+
+### Hypomethylated
+
+::: {.callout-note collapse="true"}
+#### Table Hypo
+```{r}
+#| error: true
+
+go_overrep_table_hypo
+```
+
+:::
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
 
 go_overrep_barplot_hypo
 ```
+
+
+### Hypermethylated
+
+::: {.callout-note collapse="true"}
+#### Table Hyper
+
+```{r}
+#| error: true
+
+go_overrep_table_hyper
+```
+:::
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+go_overrep_barplot_hyper
+```
+
+## GO Over-representation of Promoters 
+
+### Promoters  All
+::: {.callout-note collapse="true"}
+#### Promoters  Table all
+```{r}
+#| error: true
+
+go_overrep_table_prom_all
+```
+:::
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+go_overrep_barplot_prom_all
+```
+
+### Promoters Hypomethylated
+
+::: {.callout-note collapse="true"}
+#### Table Hypo
+```{r}
+#| error: true
+
+go_overrep_table_prom_hypo
+```
+
+:::
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+go_overrep_barplot_prom_hypo
+```
+
+### Promoters Hypermethylated
+
+::: {.callout-note collapse="true"}
+#### Table Hyper
+```{r}
+#| error: true
+
+go_overrep_table_prom_hyper
+```
+
+:::
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+go_overrep_barplot_prom_hyper
+```
+
 # KEGG analysis
 
 ```{r}
@@ -569,3 +658,70 @@ kegg_overrep_barplot_hyper
 
 kegg_overrep_barplot_hypo
 ```
+
+
+
+
+## KEGG Over-representation Promoters
+
+::: {.callout-note collapse="true"}
+## KEGG table promoters
+Prom All
+```{r}
+#| error: true
+df_kegg_overrep_table_prom_all
+```
+
+Prom hypo
+```{r}
+#| error: true
+df_kegg_overrep_table_prom_hypo
+```
+
+Prom hyper
+```{r}
+#| error: true
+df_kegg_overrep_table_prom_hyper
+```
+:::
+
+### KEGG Over-representation Promoters **All**
+
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+
+kegg_overrep_barplot_prom_all
+```
+
+### KEGG Over-representation Promoter **Hypermethylated**
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+
+kegg_overrep_barplot_prom_hyper
+```
+
+### KEGG Over-representation Promoter **Hypomethylated**
+
+```{r}
+#| echo: true
+#| eval: true
+#| fig-width: 8
+#| fig-height: 8
+#| error: true
+
+
+kegg_overrep_barplot_prom_hypo
+```
+

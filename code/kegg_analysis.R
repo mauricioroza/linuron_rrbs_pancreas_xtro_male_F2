@@ -95,6 +95,20 @@ hyper_genes <- res2 %>% dplyr::filter(mcols.meth.diff > meth_cut)
 
 KEGG(hyper_genes, "hyper")
 
+# Promoters
+
+feature_sum_annot2 <- feature_sum_annot %>% 
+  mutate(ensembl_gene_id = feature)
+
+prom_genes <- feature_sum_annot2 %>% dplyr::filter(prom == 1)
+KEGG(prom_genes, "prom_all")
+
+prom_hypo <- prom_genes %>% dplyr::filter(mcols.meth.diff < -meth_cut)
+KEGG(prom_hypo, "prom_hypo")
+
+prom_hyper <- prom_genes %>% dplyr::filter(mcols.meth.diff > meth_cut)
+KEGG(prom_hyper, "prom_hyper")
+
 
 save_ggplot <- function (plot_name) {
   
