@@ -2,6 +2,10 @@ if (!require("genomation", quietly = TRUE)) {
   BiocManager::install("genomation")
 }
 
+if (!require("biomaRt", quietly = TRUE)) {
+  BiocManager::install("biomaRt")
+}
+
 # First load the annotation data; i.e the coordinates of promoters, TSS, intron and exons
 ensembl_gtf2bed12_file <- "./annotations/Xtro10_ensemble_gtf2bed_ucsc_chr.bed"
 
@@ -62,5 +66,5 @@ promoters <- GRanges(
   mcols = cbind(promoters_df)
 )
 
-myobj <- regionCounts(myobj, c(promoters))
+myobj <- regionCounts(myobj, unique(promoters), cov.bases = 1, strand.aware = FALSE)
 # myobj <- regionCounts(myobj, c(genes))

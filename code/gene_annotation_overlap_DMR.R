@@ -62,3 +62,7 @@ feature_sum_annot <- cbind(dmr_table_genes, sum_anot) %>%
     intron == 1 ~ "intron",
     TRUE ~ "intergenic"
   ))
+
+feat_sum_annot_dir <- paste0("./data/annotated_df_",file_path_name,".rds")
+saveRDS(feature_sum_annot, ascii=FALSE, file = feat_sum_annot_dir)
+

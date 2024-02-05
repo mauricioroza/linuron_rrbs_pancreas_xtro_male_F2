@@ -10,6 +10,9 @@ if (!require("writexl", quietly = TRUE)) {
   install.packages("writexl")
 }
 
+if (!require("DT", quietly = TRUE)){
+  install.packages("DT")
+}
 
 gene_ontology <- function(gene_list, meth_status) {
 

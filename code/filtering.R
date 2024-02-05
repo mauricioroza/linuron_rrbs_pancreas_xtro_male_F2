@@ -14,6 +14,9 @@ myobj_filtered_norm <- normalizeCoverage(myobj_filtered, method = "median")
 # Merge data
 myobj_united <- methylKit::unite(myobj_filtered_norm, destrand=FALSE, min.per.group = min_n) #min.per.group = minimum number of samples per replicate needed to cover a region/base
 
+meth_united_dir <- paste0("./data/meth_united_",file_path_name,".rds")
+saveRDS(myobj_united, ascii=FALSE, file = meth_united_dir)
+
 # Number of regions covered
 n_cpg <- nrow(myobj_united)
 

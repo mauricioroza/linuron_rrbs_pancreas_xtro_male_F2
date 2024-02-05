@@ -50,6 +50,7 @@ KEGG <- function(genes, meth_status) {
   
   if (is.null(kegg_overrep)) {
     print(paste0("No ", meth_status, " gene could be mapped"))
+    assign(paste0("kegg_overrep_", meth_status), kegg_overrep, envir = .GlobalEnv)
     return(NULL)
   }
   

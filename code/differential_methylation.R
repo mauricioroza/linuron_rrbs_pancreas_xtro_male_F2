@@ -14,6 +14,8 @@ meth_diff <- calculateDiffMeth(meth_filtered,
 meth_diff_dir <- paste0("./data/meth_diff_",file_path_name,".rds")
 saveRDS(meth_diff, ascii=FALSE, file = meth_diff_dir)
 
+# meth_diff <- readRDS(meth_diff_dir)
+
 # meth_diff <- meth_diff[!grepl("Sca", meth_diff$chr), ] #remove DMR located in scaffolds of the genome, to smooth further analysis
 nrow_meth_diff <- nrow(meth_diff)
 

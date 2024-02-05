@@ -2,6 +2,23 @@ if (!require("circlize", quietly = TRUE)){
   install.packages("circlize")
 }
 
+if (!require("svglite", quietly = TRUE)){
+  install.packages("svglite")
+}
+
+# meth_diff <- readRDS("./data/meth_diff_cut_10_tiles_100.rds")
+# qvalue_cut <- 0.05
+# meth_cut <- 10
+# meth_diff_cut_hypo <- getMethylDiff(meth_diff,
+#                                     difference = meth_cut,
+#                                     qvalue = qvalue_cut,
+#                                     type = "hypo")
+# 
+# meth_diff_cut_hyper <- getMethylDiff(meth_diff,
+#                                      difference = meth_cut,
+#                                      qvalue = qvalue_cut,
+#                                      type = "hyper")
+
 
 # prepare data frames with hypo and hyper methylated regions
 
@@ -25,21 +42,83 @@ all_DMRs <- data.frame(meth_diff) %>% filter(qvalue <= qvalue_cut)
 DMR_all <- data.frame("chr" = all_DMRs$chr,
                       "start" = all_DMRs$start,
                       "end" = all_DMRs$end,
-                      "meth.diff" = all_DMRs$meth.diff)
+                      "meth.diff" = all_DMRs$meth.diff) 
 
+DMR_all <- DMR_all %>%
+  mutate(color = case_when(
+    meth.diff >= 10 ~ "#E41A1C",
+    meth.diff <= -10 ~ "#377EB8",
+    meth.diff < 10 & meth.diff > -10 ~ "#D3D3D3"
+  )) 
+
+
+
+
+one <- c("pnliprp2", "lmf1") #Lipase production
+two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr") #Glucose metabolism
+three <- c("clstn2","cacna2d3", "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2") #Calcium signalling
+four <- c("vti1a") #vesicle transport
+five <- c("igf1r") #pancreas development
+
+rlv.genes <- c(one, two, three, four, five)
 
 # prepare data frame with selected genes that you want to highlight in the plot
 
+hyper_color_rlv <- "#660000"
+hypo_color_rlv <- "#000166"
+
 annot <- feature_sum_annot %>% 
-  filter(str_detect(description, "methyl"))  %>% # Filter the names that you want to show in the plot
-  dplyr::select(seqnames, start, end, mcols.meth.diff, external_gene_name) %>%
-  mutate(color = case_when(
-    mcols.meth.diff >= meth_cut ~ "#E41A1C",
-    mcols.meth.diff <= -meth_cut ~ "#377EB8"
-  )
-  )
+  filter(str_detect(external_gene_name, paste(rlv.genes, collapse = "|")))  %>% # Filter the names that you want to show in the plot
+  tidyr::unite("loc", c("seqnames", "start", "end"), remove = FALSE) %>%
+  dplyr::select(seqnames, start, end, mcols.meth.diff, external_gene_name, loc) %>%
+  mutate(pointcolor = case_when(
+    mcols.meth.diff >= 10 ~ hyper_color_rlv,
+    mcols.meth.diff <= -10 ~ hypo_color_rlv
+  )) %>%
+  mutate(external_gene_name = ifelse(str_detect(external_gene_name, paste(one, collapse = "|")),
+                                     str_replace_all(external_gene_name, 
+                                                     paste(one, collapse = "|"), 
+                                                     "¹\\0"),
+                                     external_gene_name)) %>%
+  mutate(external_gene_name = ifelse(str_detect(external_gene_name, paste(two, collapse = "|")),
+                                     str_replace_all(external_gene_name, 
+                                                     paste(two, collapse = "|"), 
+                                                     "²\\0"),
+                                     external_gene_name)) %>%
+  mutate(external_gene_name = ifelse(str_detect(external_gene_name, paste(three, collapse = "|")),
+                                     str_replace_all(external_gene_name, 
+                                                     paste(three, collapse = "|"), 
+                                                     "³\\0"),
+                                     external_gene_name)) %>%
+  mutate(external_gene_name = ifelse(str_detect(external_gene_name, paste(four, collapse = "|")),
+                                     str_replace_all(external_gene_name, 
+                                                     paste(four, collapse = "|"), 
+                                                     "⁴\\0"),
+                                     external_gene_name)) %>%
+  mutate(external_gene_name = ifelse(str_detect(external_gene_name, paste(five, collapse = "|")),
+                                     str_replace_all(external_gene_name, 
+                                                     paste(five, collapse = "|"), 
+                                                     "⁵\\0"),
+                                     external_gene_name))
+  
 
 annot$seqnames <- gsub("C", "c", annot$seqnames)
+
+pointcolor <- annot %>% dplyr::select(pointcolor, loc)
+
+DMR_all2 <- DMR_all
+DMR_all2$loc <- paste(DMR_all$chr, DMR_all$start, DMR_all$end, sep = "_")
+
+DMR_all2 <- left_join(DMR_all2, pointcolor, by = "loc") %>%
+  mutate(color = if_else(is.na(pointcolor), color, pointcolor),
+         cex = case_when(
+           color == hyper_color_rlv ~ 1,
+           color == hypo_color_rlv ~ 1,
+           TRUE ~ 0.5
+         )) %>%
+  dplyr::select(-loc, -pointcolor)
+
+DMR_all2 <- DMR_all2[order(DMR_all2$cex),]
 
 circular_plot <- function() {
   circos.clear()
@@ -51,18 +130,19 @@ circular_plot <- function() {
   )
   circos.par("track.height" = 0.3)
   
-  circos.genomicTrack(DMR_all, 
+  
+  circos.genomicTrack(DMR_all2[,1:4], 
                       stack = FALSE, 
                       ylim = c(-100, 100),
                       panel.fun = function(region, value, ...) {
-                        cex = 0.5
-                        i = ifelse(value[[1]] > meth_cut, "#E41A1C", ifelse(value[[1]] > -meth_cut, "#D3D3D3", "#377EB8"))
+                        cex = DMR_all2[rownames(value), "cex"]
+                        i = DMR_all2[rownames(value), "color"]
                         for(h in seq(-100, 100, by = 25)) {
                           circos.lines(CELL_META$cell.xlim, c(h, h), lty = 3, col = "#E7E7E7")
                         }
-                        circos.genomicPoints(region, value, cex = cex, pch = 16, col = i, ...)
-                        circos.lines(CELL_META$cell.xlim, c(-meth_cut, -meth_cut), col = "#7D7D7D", lwd = 1, lty = "dashed")
-                        circos.lines(CELL_META$cell.xlim, c(meth_cut, meth_cut), col = "#7D7D7D", lwd = 1, lty = "dashed")
+                        circos.genomicPoints(region, value, cex = cex, pch = 16, col = i, bg = i, ...)
+                        circos.lines(CELL_META$cell.xlim, c(-10, -10), col = "#7D7D7D", lwd = 1, lty = "dashed")
+                        circos.lines(CELL_META$cell.xlim, c(10, 10), col = "#7D7D7D", lwd = 1, lty = "dashed")
                         circos.lines(CELL_META$cell.xlim, c(0, 0), col = "#888888", lwd = 1, lty = "dotted")
                         circos.yaxis(side = "left", 
                                      at = c(-100, -50, 0, 50, 100),
@@ -71,13 +151,9 @@ circular_plot <- function() {
                                      labels.cex = 0.3
                         )
                       })  
+  circos.genomicLabels(annot, labels.column = 5, cex = 1.2, col= annot$pointcolor, line_lwd = 1, line_col="grey10", 
+                       side="inside", connection_height=0.025, labels_height=0.05, padding = 0.8)
   
-  circos.par("track.height" = 0.15)
-  
-  circos.genomicDensity(bed_list, col = c("#FF000080", "#0000FF80"))
-  
-  # circos.genomicLabels(annot, labels.column=5, cex=0.5, col= annot$color, line_lwd=0.5, line_col="grey80", 
-  #                      side="inside", connection_height=0.05, labels_height=0.04)
 }
 
 
@@ -97,3 +173,12 @@ circular_plot()
 dev.off()
 
 circular_plot()
+
+svglite(paste0("./figures/circular_plot_", file_path_name, ".svg"),
+        width = 16,
+        height = 16,
+        scaling = 2)
+
+circular_plot()
+
+dev.off()
