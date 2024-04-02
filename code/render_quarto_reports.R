@@ -45,33 +45,33 @@ render_reports <- function(meth_cut, analysis, tiling_window = "", tiling_step =
 
 
 # data frame with params
-df <- data.frame(
-  meth_cut = c(10, 15, 10, 20),
-  analysis = c("CpGs", "CpGs", "tiles", "tiles"),
-  tiling_window = c(1, 1, 100, 100),
-  tiling_step = c(1, 1, 100, 100)
-)
-
-df <- data.frame(
-  meth_cut = c(10, 15, 10, 20),
-  analysis = c("CpGs", "CpGs", "tiles", "tiles"),
-  tiling_window = c(1, 1, 100, 100),
-  tiling_step = c(1, 1, 100, 100)
-)
-
-df <- data.frame(
-  meth_cut = c(10, 15, 20),
-  analysis = c("promoter", "promoter", "promoter"),
-  tiling_window = c("", "", ""),
-  tiling_step = c("", "", "")
-)
-
 # df <- data.frame(
-#   meth_cut = c(10, 15),
-#   analysis = c("tiles", "tiles"),
-#   tiling_window = c(100, 100),
-#   tiling_step = c(100, 100)
+#   meth_cut = c(10, 15, 10, 20),
+#   analysis = c("CpGs", "CpGs", "tiles", "tiles"),
+#   tiling_window = c(1, 1, 100, 100),
+#   tiling_step = c(1, 1, 100, 100)
 # )
+# 
+# df <- data.frame(
+#   meth_cut = c(10, 15, 10, 20),
+#   analysis = c("CpGs", "CpGs", "tiles", "tiles"),
+#   tiling_window = c(1, 1, 100, 100),
+#   tiling_step = c(1, 1, 100, 100)
+# )
+# 
+# df <- data.frame(
+#   meth_cut = c(10, 15, 20),
+#   analysis = c("promoter", "promoter", "promoter"),
+#   tiling_window = c("", "", ""),
+#   tiling_step = c("", "", "")
+# )
+
+df <- data.frame(
+  meth_cut = c(10),
+  analysis = c("tiles"),
+  tiling_window = c(100),
+  tiling_step = c(100)
+)
 
 # df <- data.frame(
 #   meth_cut = c(10),

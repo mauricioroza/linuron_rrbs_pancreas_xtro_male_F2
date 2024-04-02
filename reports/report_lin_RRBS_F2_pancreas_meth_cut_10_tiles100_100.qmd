@@ -725,3 +725,13 @@ kegg_overrep_barplot_prom_hyper
 kegg_overrep_barplot_prom_hypo
 ```
 
+::: {.callout-note collapse="true"}
+# Session info
+
+```{r}
+Sys.info()
+
+sessionInfo()
+```
+
+:::

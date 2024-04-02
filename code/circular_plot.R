@@ -18,6 +18,8 @@ if (!require("svglite", quietly = TRUE)){
 #                                      difference = meth_cut,
 #                                      qvalue = qvalue_cut,
 #                                      type = "hyper")
+# feature_sum_annot <- readRDS("./data/annotated_df__cut_10_tiles100.rds")
+# file_path_name <- "cut_10_tiles_100"
 
 
 # prepare data frames with hypo and hyper methylated regions
@@ -56,7 +58,7 @@ DMR_all <- DMR_all %>%
 
 one <- c("pnliprp2", "lmf1") #Lipase production
 two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr") #Glucose metabolism
-three <- c("clstn2","cacna2d3", "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2") #Calcium signalling
+three <- c("clstn2","cacna2d3", "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2", "ano1") #Calcium signalling
 four <- c("vti1a") #vesicle transport
 five <- c("igf1r") #pancreas development
 

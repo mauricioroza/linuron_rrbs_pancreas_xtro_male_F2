@@ -5,6 +5,7 @@ library(car)
 library(DHARMa)
 library(betareg)
 library(cowplot)
+library(emmeans)
 
 
 Fat_body <- read_excel("data/fat_body_fatty_acids.xlsx", sheet = 1)

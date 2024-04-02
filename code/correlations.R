@@ -167,6 +167,9 @@ perc_meth_table <- perc_meth_table(pancreas.meth, pm)
 fat <- read_excel("data/fat_body_fatty_acids.xlsx") %>%
   dplyr::select(!c('20:3n3', "20:4n6", "DPA"))
 
+liver <- read_excel("data/liver_fatty_acids.xlsx") %>%
+  dplyr::select(!c('20:3n3', "18:3n3"))
+
 phenotype <- read_excel("data/phenotype_data.xlsx")
 
 phenotype <- phenotype %>%
@@ -174,9 +177,10 @@ phenotype <- phenotype %>%
 
 one <- c("pnliprp2", "lmf1") #Lipase production
 two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr") #Glucose metabolism
-three <- c("clstn2","cacna2d3", "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2") #Calcium signalling
+three <- c("clstn2","cacna2d3", "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2", "ano1") #Calcium signalling
 four <- c("vti1a") #vesicle transport
 five <- c("igf1r") #pancreas development
+six <- c("tcf7l2", "ADCY5")
 
 phen <- merge(fat, phenotype, by = c("ID", "treatment"))
 
@@ -185,4 +189,14 @@ df <- rlv_genes_table(perc_meth_table, c(one, two, three, four, five), phen)
 corr_table <- correlation_matrix(df, type = "spearman")
 
 corr_table <- corr_table[-c((ncol(phen)-1):ncol(corr_table)), -c(1:(ncol(phen)-2))] %>% data.frame %>%
+  rownames_to_column(var = "Gene")
+
+
+phen.liver <- merge(liver, phenotype, by = c("ID", "treatment"))
+
+df.liver <- rlv_genes_table(perc_meth_table, c(one, two, three, four, five,six), phen.liver)
+
+corr_table.liver <- correlation_matrix(df.liver, type = "spearman")
+
+corr_table.liver <- corr_table.liver[-c((ncol(phen.liver)-1):ncol(corr_table.liver)), -c(1:(ncol(phen.liver)-2))] %>% data.frame %>%
   rownames_to_column(var = "Gene")
