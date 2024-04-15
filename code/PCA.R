@@ -2,6 +2,8 @@ library(tidyverse)
 library(readxl)
 library(ChIPpeakAnno)
 library(methylKit)
+library(cowplot)
+library(ggrepel)
 
 ######################################################################
 
@@ -123,20 +125,25 @@ phenotype <- read_excel("data/phenotype_data.xlsx")
 # phenotype <- phenotype %>%
 #   dplyr::select(treatment, ID, body_weight, cholesterol, triglycerids, glucose)
 
+# phenotype <- phenotype %>%
+#   dplyr::select(treatment, ID, glucose, body_weight, cholesterol, triglycerids)
+
 phenotype <- phenotype %>%
-  dplyr::select(treatment, ID, glucose, body_weight, cholesterol, triglycerids)
+  dplyr::select(treatment, ID, glucose, body_weight)
 
 one <- c("pnliprp2") #Lipase production
 two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr", "uggt1") #Glucose metabolism
 three <- c("clstn2","cacna2d3", "cacna1d", "cat2", "casr", "cacng3",
            "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2", "ano1") #Calcium signalling
-four <- c("vti1a") #vesicle transport
+four <- c("plec") #pancreatitis, tissue integrity
 five <- c("igf1r") #pancreas development
-six <- c("tcf7l2", "ADCY5", "gckr") #
+six <- c("tcf7l2", "ADCY5") #
+seven <- c("kdm2a","kmt2b","kdm4b","ASH1L", "ehmt1", "prmt3", "kat14", "naa50") #histone modification
+
 
 phen <- merge(fat, phenotype, by = c("ID", "treatment"))
 
-gene_list <- c(one, two, three, six)
+gene_list <- c(one, two, three,four,five, six)
 rlv.table.pca <- rlv_genes_table(perc_meth_table, gene_list, phenotype)
 PCA_phenotype(rlv.table.pca,  "pca_all_genes")
 
@@ -151,14 +158,23 @@ df.groups <- df.groups %>%
     str_detect(var, paste(one, collapse = "|")) ~ "Lipase production",
     str_detect(var, paste(two, collapse = "|")) ~ "Glucose metabolism",
     str_detect(var, paste(three, collapse = "|")) ~ "Calcium signalling",
-    str_detect(var, paste(six, collapse = "|")) ~ "Insulin secretion"
+    str_detect(var, paste(four, collapse = "|")) ~ "Tissue integrity",
+    str_detect(var, paste(five, collapse = "|")) ~ "Growth",
+    str_detect(var, paste(six, collapse = "|")) ~ "Insulin secretion",
   ))
 
-gene_func <- as.factor(df.groups$group)
+gene_func <- factor(df.groups$group, 
+                       levels = c("Calcium signalling",
+                                  "Glucose metabolism",
+                                  "Growth",
+                                  "Insulin secretion",
+                                  "Lipase production",
+                                  "Tissue integrity",
+                                  "Phenotype"))
 names(gene_func) <- df.groups$var
 
 library(RColorBrewer)
-col <- brewer.pal(n = length(group), "Set1")
+col <- brewer.pal(n = length(levels(gene_func)), "Set1")
 
 
 var_plot <- fviz_pca_var(pca_pca_all_genes, repel = TRUE, col.var = gene_func, palette = col)
@@ -167,35 +183,101 @@ ind_plot <- fviz_pca_ind(pca_pca_all_genes,
                          habillage=as.factor(rlv.table.pca$treatment),
                          label = "var")
 
+# fac_x <- pca_pca_all_genes$ind$dist[1]
+fac_x <- 5
+fac_y <- 5
+
 biplot <- fviz_pca_biplot(pca_pca_all_genes,
                           fill.ind = as.factor(rlv.table.pca$treatment),
                           col.ind = "black",
                           pointshape = 21,
-                          palette = col,
+                          palette = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3","#FF7F00", "#A65628", "black"),
+                          geom.var = c("arrow"),
                           col.var = gene_func,
                           label = "var",
+                          addEllipses = TRUE,
+                          ellipse.type = "confidence",
+                          title = NULL,
                           repel = TRUE) +
-  geom_point(shape = as.factor(rlv.table.pca$treatment)) +
   scale_fill_manual(values = c("black", "red")) +
-  labs(fill = "Treatment", color = "Gene Function")  # Change legend title
-  
-  
+  geom_label_repel(data = data.frame(pca_pca_all_genes$var$coord),
+    aes(Dim.1*fac_x, Dim.2*fac_y, 
+        label = rownames(data.frame(pca_pca_all_genes$var$coord)),
+        color = gene_func),
+    box.padding = 0.1,
+    force = 0.25,
+    max.overlaps = 50,
+    #direction = "x",
+    #nudge_x = 0.5
+    ) +
+  labs(fill = "Treatment", 
+       color = "Function"
+       ) + # Change legend title
+  xlab(paste0("PC1 (", round(pca_pca_all_genes[["eig"]][1,2], digits = 1),"%)")) +
+  ylab(paste0("PC2 (", round(pca_pca_all_genes[["eig"]][2,2], digits = 1),"%)"))
+
+
   
 # Contributions of variables to PC1
-fviz_contrib(pca_pca_all_genes, choice = "var", axes = 1)
+cont1 <- fviz_contrib(pca_pca_all_genes, choice = "var", axes = 1)+
+  labs(title = "Contribution of Variables to PC1"
+  )
 # Contributions of variables to PC2
-fviz_contrib(pca_pca_all_genes, choice = "var", axes = 2)
+cont2 <- fviz_contrib(pca_pca_all_genes, choice = "var", axes = 2)+
+  labs(title = "Contribution of Variables to PC2"
+  )
 
-fviz_dend(pca_pca_all_genes)
+bottom_plot <- plot_grid(cont1, cont2, labels = c('B', 'C'))
 
+PCAplot <- plot_grid(biplot, bottom_plot, 
+                     labels = c("A", ""), 
+                     ncol = 1,
+                     rel_heights = c(1, 0.3)
+                     )
+
+ggsave2("figures/PCA.tiff",
+        plot = PCAplot,
+        scale = 1.7,
+        width = 15,
+        height = 15,
+        units = "cm",
+        dpi = 300,
+        bg = "white"
+        )
 
 feature_sum_annot <- readRDS("./data/annotated_df__cut_10_tiles100.rds")
 rlv_genes_table_print <- feature_sum_annot %>%
-  filter(external_gene_name %in% c(one,two,three)) %>%
-  arrange(match(external_gene_name, c(one,two,three))) %>%
-  dplyr::select(external_gene_name, location, mcols.meth.diff, mcols.qvalue, description) %>%
+  arrange(seqnames) %>%
+  arrange(start) %>%
+  filter(external_gene_name %in% c(one,two,three,four, five, six, seven)) %>%
+  arrange(match(external_gene_name, c(one,two,three,four, five, six, seven))) %>%
+  mutate(func = case_when(
+    external_gene_name %in% one ~ "Lipase production",
+    external_gene_name %in% two ~ "Glucose metabolism",
+    external_gene_name %in% three ~ "Calcium signalling",
+    external_gene_name %in% six ~ "Insulin secretion",
+    external_gene_name %in% four ~ "Tissue integrity",
+    external_gene_name %in% five ~ "Growth",
+    external_gene_name %in% seven ~ "Epigenetic modification"
+  )) %>%
+  dplyr::select(func, external_gene_name, location, mcols.meth.diff, mcols.qvalue, description, start) %>%
   mutate(mcols.meth.diff = round(mcols.meth.diff, digits = 1),
          mcols.qvalue = round(mcols.qvalue, digits = 3),
          description = sub("\\s*\\[Source.*", "", description)
   )
+
+rlv_genes_table_print$func <- factor(rlv_genes_table_print$func,
+                                     levels = c("Calcium signalling", 
+                                                "Glucose metabolism", 
+                                                "Growth", 
+                                                "Insulin secretion", 
+                                                "Lipase production", 
+                                                "Tissue integrity",
+                                                "Epigenetic modification"
+                                     ))
+
+
+rlv_genes_table_print <- rlv_genes_table_print %>%
+  arrange(func)
+
 clipr::write_clip(rlv_genes_table_print, object_type = "table")

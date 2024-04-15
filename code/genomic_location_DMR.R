@@ -2,6 +2,8 @@ if (!require("genomation", quietly = TRUE)){
   install.packages("genomation")
 }
 
+# meth_diff_cut <- readRDS("data/meth_diff_cut_10_tiles_100.rds")
+
 # Genome locations
 # First load the annotation data; i.e the coordinates of promoters, TSS, intron and exons
 ensembl_gtf2bed12_file <- "./annotations/Xtro10_ensemble_gtf2bed_ucsc_chr.bed"
@@ -21,6 +23,9 @@ gen_regions <- getTargetAnnotationStats(meth_diff_cut_annotated, percentage=FALS
 
 # Summary of target set annotation
 meth_diff_cut_annotated
+
+meth_diff_cut_annotated_dir <- paste0("./data/meth_diff_cut_annotated",file_path_name,".rds")
+saveRDS(meth_diff_cut_annotated, ascii=FALSE, file = meth_diff_cut_annotated_dir)
 
 # View the distance to the nearest Transcription Start Site; the target.row column in the output indicates the row number in the initial target set
 dist_tss <- getAssociationWithTSS(meth_diff_cut_annotated)

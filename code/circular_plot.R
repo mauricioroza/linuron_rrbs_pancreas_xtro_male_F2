@@ -56,13 +56,16 @@ DMR_all <- DMR_all %>%
 
 
 
-one <- c("pnliprp2", "lmf1") #Lipase production
-two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr") #Glucose metabolism
-three <- c("clstn2","cacna2d3", "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2", "ano1") #Calcium signalling
-four <- c("vti1a") #vesicle transport
-five <- c("igf1r") #pancreas development
+one <- c("clstn2","cacna2d3", "cacna1d", "cat2", "casr", "cacng3",
+         "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2", "ano1") #Calcium signalling
+two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr", "uggt1") #Glucose metabolism
+three <- c("tcf7l2", "ADCY5")
+#four <- c("vti1a") #vesicle transport
+#five <- c("igf1r") #pancreas development
+four <- c("pnliprp2") #Lipase production
+  
 
-rlv.genes <- c(one, two, three, four, five)
+rlv.genes <- c(one, two, three, four)
 
 # prepare data frame with selected genes that you want to highlight in the plot
 
@@ -96,11 +99,6 @@ annot <- feature_sum_annot %>%
                                      str_replace_all(external_gene_name, 
                                                      paste(four, collapse = "|"), 
                                                      "⁴\\0"),
-                                     external_gene_name)) %>%
-  mutate(external_gene_name = ifelse(str_detect(external_gene_name, paste(five, collapse = "|")),
-                                     str_replace_all(external_gene_name, 
-                                                     paste(five, collapse = "|"), 
-                                                     "⁵\\0"),
                                      external_gene_name))
   
 
@@ -153,9 +151,9 @@ circular_plot <- function() {
                                      labels.cex = 0.3
                         )
                       })  
-  circos.genomicLabels(annot, labels.column = 5, cex = 1.2, col= annot$pointcolor, line_lwd = 1, line_col="grey10", 
+  circos.genomicLabels(annot, labels.column = 5, cex = 1.2, col= annot$pointcolor, line_lwd = 1, line_col="grey10",
                        side="inside", connection_height=0.025, labels_height=0.05, padding = 0.8)
-  
+
 }
 
 

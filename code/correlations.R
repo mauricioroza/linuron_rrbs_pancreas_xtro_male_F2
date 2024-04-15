@@ -175,28 +175,28 @@ phenotype <- read_excel("data/phenotype_data.xlsx")
 phenotype <- phenotype %>%
   dplyr::select(treatment, ID, body_weight, cholesterol, triglycerids, glucose)
 
-one <- c("pnliprp2", "lmf1") #Lipase production
-two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr") #Glucose metabolism
-three <- c("clstn2","cacna2d3", "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2", "ano1") #Calcium signalling
-four <- c("vti1a") #vesicle transport
+one <- c("pnliprp2") #Lipase production
+two <- c("minpp1", "aldh7a1", "tpi1" ,"eno3", "gckr", "uggt1") #Glucose metabolism
+three <- c("clstn2","cacna2d3", "cacna1d", "cat2", "casr", "cacng3",
+           "thbs4", "nox5", "mctp1", "eef2k", "melk", "cadps2", "ano1") #Calcium signalling
+four <- c("plec") #pancreatitis
 five <- c("igf1r") #pancreas development
 six <- c("tcf7l2", "ADCY5")
 
-phen <- merge(fat, phenotype, by = c("ID", "treatment"))
+genes <- c(three, two, six, one, five, four, six)
 
-df <- rlv_genes_table(perc_meth_table, c(one, two, three, four, five), phen)
+df <- rlv_genes_table(perc_meth_table, genes, phenotype)
 
 corr_table <- correlation_matrix(df, type = "spearman")
 
-corr_table <- corr_table[-c((ncol(phen)-1):ncol(corr_table)), -c(1:(ncol(phen)-2))] %>% data.frame %>%
-  rownames_to_column(var = "Gene")
+corr_table <- corr_table[-c(1:(ncol(phenotype)-2)), -c((ncol(phenotype)-1):ncol(corr_table))] %>% data.frame %>%
+  rownames_to_column(var = "Gene") %>%
+  mutate(Duplicated_Gene = Gene)
 
+# Remove characters ending with ".1", ".2", or any "." followed by a number
+corr_table$Gene <- gsub("\\.\\d+$", "", corr_table$Gene)
 
-phen.liver <- merge(liver, phenotype, by = c("ID", "treatment"))
+corr_table_ordered <- corr_table %>%
+  arrange(match(Gene, genes))
 
-df.liver <- rlv_genes_table(perc_meth_table, c(one, two, three, four, five,six), phen.liver)
-
-corr_table.liver <- correlation_matrix(df.liver, type = "spearman")
-
-corr_table.liver <- corr_table.liver[-c((ncol(phen.liver)-1):ncol(corr_table.liver)), -c(1:(ncol(phen.liver)-2))] %>% data.frame %>%
-  rownames_to_column(var = "Gene")
+clipr::write_clip(corr_table_ordered)

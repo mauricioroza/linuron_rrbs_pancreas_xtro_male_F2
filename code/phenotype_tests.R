@@ -8,17 +8,21 @@ library(cowplot)
 library(emmeans)
 
 
-Fat_body <- read_excel("data/fat_body_fatty_acids.xlsx", sheet = 1)
-Liver <- read_excel("data/liver_fatty_acids.xlsx", sheet = 1)
+phenotype <- read_excel("data/phenotype_data.xlsx")
+
+phenotype <- phenotype %>%
+  dplyr::select(treatment, ID, body_weight, glucose)
+
+phenotype <- phenotype[-c(1,8,9,13,15),]
 
 func <- function(phenotype) {
 
   name <- paste0(deparse(substitute(phenotype)))  
     
-  prop <- phenotype %>% mutate_if(is.numeric, list(~ . / 100))
+  prop <- phenotype # %>% mutate_if(is.numeric, list(~ . / 100))
   
   
-  tests <- lapply(prop[,c(3:ncol(prop))], function (x) {betareg(x ~ treatment, data = prop)})
+  tests <- lapply(prop[,c(3:ncol(prop))], function (x) {lm(x ~ treatment, data = prop)})
   
   summary <- lapply(tests, function (x) {summary(x)})
   anodev <- lapply(tests, function (x) {Anova(x, type = 3)})
@@ -33,7 +37,7 @@ func <- function(phenotype) {
   
   sig <- lapply((jointtests), function(i) {
     as.data.frame(i) %>%
-      cbind(., Treatment = c("Linuron_H")) %>%
+      cbind(., Treatment = c("Linuron")) %>%
       mutate(.group = case_when(
         p.value < 0.05 & p.value > 0.01 ~ "*",
         p.value < 0.01 & p.value > 0.001 ~ "**",
@@ -73,7 +77,7 @@ func <- function(phenotype) {
   
   summ_ctrl <- subset(summary_table, summary_table$treatment == "Control")
   
-  summ_lin <- subset(summary_table, summary_table$treatment == "Linuron_H")
+  summ_lin <- subset(summary_table, summary_table$treatment == "Linuron")
   
   
   stars_sig_table <- function(tests_list, summ_list,
@@ -136,7 +140,7 @@ func <- function(phenotype) {
       .x
     }))
   
-  write_xlsx(sig_tables, path = paste0("./tables/", deparse(substitute(phenotype)), "_fatty acids_statistics_table.xlsx"))
+  write_xlsx(sig_tables, path = paste0("./tables/", deparse(substitute(phenotype)), "_statistics_table.xlsx"))
   
   assign(paste0(deparse(substitute(phenotype)), "_tests") , tests, envir = .GlobalEnv)
   assign(paste0(deparse(substitute(phenotype)), "_summary") , summary, envir = .GlobalEnv)
@@ -147,10 +151,7 @@ func <- function(phenotype) {
 
 }
 
-func(Fat_body)
-func(Liver)
+func(phenotype)
 
-combined_plot <- plot_grid(plotlist = Fat_body_graph)
+combined_plot <- plot_grid(plotlist = phenotype_graph)
 combined_plot
-
-lapply(Fat_body_graph, print)

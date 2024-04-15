@@ -153,6 +153,24 @@ save_ggplot(ggo_plot_all)
 save_ggplot(go_overrep_barplot_all)
 save_ggplot(go_overrep_barplot_hyper)
 save_ggplot(go_overrep_barplot_hypo)
+save_ggplot(go_overrep_barplot_prom_hypo)
+
+
+save_RDS <- function(go_name) {
+  if (exists(paste0(deparse(substitute(go_name)))) & !is.character(go_name)) {
+    
+    saveRDS(go_name, file = paste0("./data/", deparse(substitute(go_name)),"_", file_path_name, ".rds"))
+    
+  }
+}
+
+save_RDS(ggo_result_all)
+save_RDS(go_overrep_all)
+save_RDS(go_overrep_hyper)
+save_RDS(go_overrep_hypo)
+save_RDS(go_overrep_prom_hypo)
+save_RDS(go_overrep_prom_hyper)
+
 
 # save tables
 
@@ -168,3 +186,6 @@ save_table(ggo_result_all)
 save_table(go_overrep_all)
 save_table(go_overrep_hyper)
 save_table(go_overrep_hypo)
+save_table(go_overrep_prom_hypo)
+save_table(go_overrep_prom_hyper)
+

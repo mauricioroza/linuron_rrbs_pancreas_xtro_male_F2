@@ -77,6 +77,7 @@ KEGG <- function(genes, meth_status) {
     barplot(., showCategory = 20, title = paste0("KEGG Pathways Enrichment ", analysis_name, " ", meth_status))
 
   # Save objects to local environment
+  assign(paste0("kegg_overrep_", meth_status), kegg_overrep, envir = .GlobalEnv)
   assign(paste0("df_kegg_overrep_", meth_status), df_kegg_overrep, envir = .GlobalEnv)
   assign(paste0("df_kegg_overrep_table_", meth_status), df_kegg_overrep_table, envir = .GlobalEnv)
   assign(paste0("kegg_overrep_barplot_", meth_status), kegg_overrep_barplot, envir = .GlobalEnv)
@@ -109,6 +110,19 @@ KEGG(prom_hypo, "prom_hypo")
 
 prom_hyper <- prom_genes %>% dplyr::filter(mcols.meth.diff > meth_cut)
 KEGG(prom_hyper, "prom_hyper")
+
+#save RDS
+
+save_RDS <- function(go_name) {
+  if (exists(paste0(deparse(substitute(go_name)))) & !is.character(go_name)) {
+    
+    saveRDS(go_name, file = paste0("./data/", deparse(substitute(go_name)),"_", file_path_name, ".rds"))
+    
+  }
+}
+
+save_RDS(kegg_overrep_hyper)
+save_RDS(kegg_overrep_hypo)
 
 
 save_ggplot <- function (plot_name) {
