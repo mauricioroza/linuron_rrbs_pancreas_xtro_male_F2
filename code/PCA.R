@@ -4,6 +4,9 @@ library(ChIPpeakAnno)
 library(methylKit)
 library(cowplot)
 library(ggrepel)
+library(extrafont)
+
+loadfonts()
 
 ######################################################################
 
@@ -208,7 +211,8 @@ biplot <- fviz_pca_biplot(pca_pca_all_genes,
     force = 0.25,
     max.overlaps = 50,
     #direction = "x",
-    #nudge_x = 0.5
+    #nudge_x = 0.5,
+    show.legend = FALSE
     ) +
   labs(fill = "Treatment", 
        color = "Function"
@@ -244,6 +248,32 @@ ggsave2("figures/PCA.tiff",
         dpi = 300,
         bg = "white"
         )
+
+ggsave2("figures/PCA.eps",
+        plot = PCAplot,
+        device = cairo_ps,
+        scale = 1.7,
+        width = 15,
+        height = 15,
+        units = "cm",
+        dpi = 300,
+        bg = "white"
+)
+
+svglite(paste0("./figures/PCA_clean.svg"),
+        width = 20,
+        height = 10,
+        scaling = 1.5)
+
+pp <- biplot +
+  theme(
+    legend.text = element_text(size = 30), 
+    legend.title = element_text(size = 30)
+  )
+
+print(pp)
+
+dev.off()
 
 feature_sum_annot <- readRDS("./data/annotated_df__cut_10_tiles100.rds")
 rlv_genes_table_print <- feature_sum_annot %>%

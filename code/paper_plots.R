@@ -10,8 +10,24 @@ if (!require("cowplot", quietly = TRUE)){
   install.packages("cowplot")
 }
 
+if (!require("ggplotify", quietly = TRUE)){
+  install.packages("ggplotify")
+}
+
+if (!require("ggpubr", quietly = TRUE)){
+  install.packages("ggpubr")
+}
+
+if (!require("extrafont", quietly = TRUE)){
+  install.packages("extrafont")
+}
+
 if (!require("methylKit", quietly = TRUE)){
   BiocManager::install("methylKit")
+}
+
+if (!require("clusterProfiler", quietly = TRUE)){
+  BiocManager::install("clusterProfiler")
 }
 
 # circular plot
@@ -73,12 +89,21 @@ circular_plot <- function() {
   # 
 }
 
+svglite(paste0("./figures/circular_plot_clean.svg"),
+        width = 10,
+        height = 10,
+        scaling = 2)
+
+circular_plot()
+
+dev.off()
+
 # genomic locations plot
 
 meth_diff_cut_annotated <- readRDS("data/meth_diff_cut_annotated_cut_10_tiles100.rds")
 plot_genomic_location <- function() {genomation::plotTargetAnnotation(meth_diff_cut_annotated, main = "Genomic Features")}
 
-gen_regions <- getTargetAnnotationStats(meth_diff_cut_annotated, percentage=FALSE,precedence=TRUE)
+gen_regions <- genomation::getTargetAnnotationStats(meth_diff_cut_annotated, percentage=FALSE,precedence=TRUE)
 
 reg_perc <- meth_diff_cut_annotated@precedence %>% 
   data.frame %>%
@@ -143,6 +168,20 @@ figure1 <- plot_grid(c_grob, pie_graph, labels = c("A","B"),
 
 ggsave2("figures/Figure_1.tiff",
         plot = figure1,
+        scale = 0.8,
+        width = 30,
+        height = 15,
+        units = "cm",
+        dpi = 300,
+        bg = "white"
+)
+
+loadfonts()
+
+
+ggsave2("figures/Figure_1.eps",
+        plot = figure1,
+        device = cairo_ps,
         scale = 0.8,
         width = 30,
         height = 15,
@@ -221,6 +260,15 @@ ggsave2("figures/Figure_2.tiff",
         bg = "white"
 )
 
-
+ggsave2("figures/Figure_2.eps",
+        plot = figure2,
+        device = cairo_ps,
+        scale = 1,
+        width = 15,
+        height = 25,
+        units = "cm",
+        dpi = 300,
+        bg = "white"
+)
 
 
