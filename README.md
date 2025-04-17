@@ -11,10 +11,11 @@ The command used to launch the workflow was as follows:
 ```bash
 nextflow run nf-core/methylseq -r 1.6.1 \
   --input '/linuron_f2_pancreas/*.fastq.gz' \
+  --profile uppmax
   --aligner bismark \
   --rrbs \
   --fasta GCF_000004195.4_UCB_Xtro_10.0_genomic.fasta \
   --single_end \
 ```
 
-The Bismark .cov files were used as input, and the analysis was run in ./code/Lin_F2_Brain+Testis.rmd
+The Bismark .cov files were used as input. Separate parts of the analysis are contained in different R scripts in /code, and the complete analysis was run through a quarto report file, rendered in code/render_quarto_reports.R with specific parameters.
