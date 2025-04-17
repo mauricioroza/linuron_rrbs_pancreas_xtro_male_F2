@@ -1,6 +1,6 @@
 # Pesticide-induced transgenerational alterations of genome-wide DNA methylation patterns in the pancreas of Xenopus tropicalis correlate with metabolic phenotypes
 
-This repository contains the R code used in the analysis of RRBS data in the <a href="https://doi.org/10.1016/j.scitotenv.2024.170949" target="_blank">publication</a>
+This repository contains the R code used in the analysis of RRBS data in the [publication](https://doi.org/10.1016/j.jhazmat.2024.135455).
 
 Raw RRBS fastq files have been deposited in the European Nucleotide Archive (ENA) at EMBL-EBI under accession number [PRJEB74774 ](https://www.ebi.ac.uk/ena/browser/view/PRJEB74774)
 
@@ -18,4 +18,4 @@ nextflow run nf-core/methylseq -r 1.6.1 \
   --single_end \
 ```
 
-The Bismark .cov files were used as input. Separate parts of the analysis are contained in different R scripts in /code, and the complete analysis was run through a quarto report file, rendered in code/render_quarto_reports.R with specific parameters.
+The Bismark .cov files were used as input. The analysis was divided in different R scripts for each step, located in /code. The complete pipeline was run through a quarto report file, rendered in code/render_quarto_reports.R with specific parameters.
